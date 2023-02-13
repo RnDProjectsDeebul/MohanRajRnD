@@ -7,8 +7,8 @@ This R&D aims to find and compare the probability distribution functions fn, unc
 
 ## Research Questions
 What are the differences in uncertainty estimates of quantized deep learning models with different uncertainty estimation methods for classification, regression and segmentation tasks?
-• Taxonomy of uncertainty estimation methods in deep learning with special
+- Taxonomy of uncertainty estimation methods in deep learning with special
 focus on single pass uncertainty estimation method
-• Literature search on different quantization methods and which are supported
+- Literature search on different quantization methods and which are supported
 by the DUT
-• How does evidential loss function impact the QAT?
+- How does evidential loss function impact the QAT?
