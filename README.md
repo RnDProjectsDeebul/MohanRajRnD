@@ -11,4 +11,4 @@ What are the differences in uncertainty estimates of quantized deep learning mod
 focus on single pass uncertainty estimation method
 - Literature search on different quantization methods and which are supported
 by the DUT
-- How does evidential loss function impact the QAT ?
+- How does evidential loss function impact the QAT?
