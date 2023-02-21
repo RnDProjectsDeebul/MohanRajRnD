@@ -32,37 +32,7 @@ def plot_calibration_curve(y_prob, y_true, num_classes, save_path, file_name):
     return fig
 
 
-
-# Helper functions for entropy plots
-def plot_entropy_constraints(data_df,test_constraints,save_path,file_name):
-    """ Dont inclued normal in test constraints list
-        Change the constraints manually for now use this function for plotting entropy
-    """
-    plt.figure(figsize=(10,10))
-    test_constraints.append('normal')
-    sub = data_df[data_df['constraint'].isin(test_constraints)]
-    d = {True: 'correct', False: 'incorrect'}
-
-    sub['is_prediction_correct'] = sub['is_prediction_correct'].replace(d)
-    sub['constraint_separated'] = sub['is_prediction_correct'] + "_" + sub['constraint']
-
-    sub = sub[sub['constraint_separated'].isin(['correct_normal', 'correct_near', 'correct_far','incorrect_normal'])]
-
-
-    g = sns.catplot(
-    data=sub, y="entropy", x="constraint_separated", col="ue_method",
-    kind="box", height=5, aspect=1, row_order = ['correct_normal','correct_near','correct_far', 'incorrect_normal'],
-    )
-    plt.show()
-    print ("------------------------------------------------------")
-
-
-
 def plot_entropy_correct_incorrect(data_df, save_path, file_name):
-    """returns a fig with box plot for the correct and 
-       incorrect predictions of all ue_methods for the 
-       provided test constraints.
-    """
     fig, ax = plt.subplots(figsize=(8, 8))
     plt.figure(figsize=(10,10))
 
@@ -74,21 +44,6 @@ def plot_entropy_correct_incorrect(data_df, save_path, file_name):
     plt.savefig(save_path+file_name)
     return fig
 
-
-
-def entropy_values_correct_wrong_predictions(data_df):
-    """ Prints the mean entropy value for all ue_methods for all constraints.
-    """
-    for ue_method in data_df.ue_method.unique():
-        subset = data_df[(data_df['ue_method'] == ue_method)]
-    for model in subset.architecture.unique():
-        subset_model = subset[subset['architecture']==model]
-        for condition in subset_model.constraint.unique():
-            print (ue_method, model, condition)
-            subset_cond = subset_model[subset_model['constraint']==condition]
-            print ("Correct : ", subset_cond[subset_cond['is_prediction_correct']==True]['entropy'].mean())
-            print ("Wrong : ", subset_cond[subset_cond['is_prediction_correct']==False]['entropy'].mean())
-    return None
 
 
 
@@ -168,7 +123,7 @@ def test_one_epoch(dataloader,model,device,loss_function):
                 labels_list.append(label.cpu().numpy)
             # CROSS ENTROPY
             if loss_function == 'Crossentropy':
-                print("Testing for cross entropy loss")  
+                #print("Testing for cross entropy loss")  
                 model.eval()
                 model.to(device=device)
                 # Get the logits
@@ -189,7 +144,7 @@ def test_one_epoch(dataloader,model,device,loss_function):
                 true_labels.extend(labels.cpu().numpy())
             # EVIDENTIAL
             elif loss_function == 'Evidential':
-                print("Testing for evidential loss")  
+                #print("Testing for evidential loss")  
                 model.eval()
                 model.to(device=device)
                 # Get the logits

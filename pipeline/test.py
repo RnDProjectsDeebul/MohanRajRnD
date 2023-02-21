@@ -24,13 +24,13 @@ save_path = '../../results/'
 models_path = save_path
 
 parameters = {  'num_classes': 10,
-                'batch_size': 8, 
+                'batch_size': 20, 
                 'model_name':'Resnet18',
                 #'loss_function': 'Evidential',
                 'loss_function': 'Crossentropy',
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                 'quantise':False}
-logger = False
+logger = True
 
 if parameters['quantise'] == True:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
@@ -158,6 +158,15 @@ confusion_mat_fig = plot_confusion_matrix1(true_labels=true_labels,
 # Calculate entropy values
 if parameters['loss_function']=='Crossentropy':
     entropy_values = get_multinomial_entropy(probabilities)
+    entropy_values_df = pd.DataFrame(entropy_values)
+    entropy_values_save_path = str(save_path)+str(condition_name)+'_entropy(probabilities).csv'
+    entropy_values_df.to_csv(path_or_buf=entropy_values_save_path)
+    
+    entropy_val = get_multinomial_entropy(model_output)
+    entropy_val_df = pd.DataFrame(entropy_val)
+    entropy_val_save_path = str(save_path)+str(condition_name)+'_entropy(logits).csv'
+    entropy_val_df.to_csv(path_or_buf=entropy_val_save_path)
+
 
 elif parameters['loss_function']== 'Evidential':
     entropy_values = get_dirchlet_entropy(model_output)
@@ -178,6 +187,10 @@ entropy_plot_fig = plot_entropy_correct_incorrect(data_df=results_df, save_path=
 #Plot calibration curve
 calibration_curve_fig = plot_calibration_curve(y_prob=probabilities, y_true=true_labels, num_classes=parameters['num_classes'],                                                             save_path=save_path, file_name=calibration_plot_name)
 
+#save model logits as csv
+logits_df = pd.DataFrame(model_output)
+logits_save_path = str(save_path)+str(condition_name)+'_logits.csv'
+logits_df.to_csv(path_or_buf=logits_save_path)
 
 if run !=None:
     run['config/hyperparameters'] = parameters
