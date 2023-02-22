@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 
 data_dir = '../../data'
 save_path = '../../results/'
-parameters = { 'num_epochs':100,
+parameters = { 'num_epochs':3,
                 'num_classes': 10,
                 'batch_size': 8, 
                 'model_name':'Resnet18',
@@ -24,7 +24,7 @@ parameters = { 'num_epochs':100,
                 'weight_decay':1e-5,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                 'quantise':False}
-logger = True
+logger = False
 
 if parameters['quantise'] == True:
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'

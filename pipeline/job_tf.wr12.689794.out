@@ -1,0 +1,17 @@
+Files already downloaded and verified
+Files already downloaded and verified
+Epoch 0/2
+----------
+LR : [0.001]
+train Loss: 1.2492 Acc: 0.5603
+val Loss: 0.9314 Acc: 0.6753
+Epoch 1/2
+----------
+LR : [0.001]
+train Loss: 0.8808 Acc: 0.6943
+val Loss: 0.8048 Acc: 0.7204
+Epoch 2/2
+----------
+LR : [0.001]
+train Loss: 0.7521 Acc: 0.7395
+val Loss: 0.7432 Acc: 0.7439
