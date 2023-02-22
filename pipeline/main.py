@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 
 data_dir = '../../data'
 save_path = '../../results/'
-parameters = { 'num_epochs':3,
+parameters = { 'num_epochs':10,
                 'num_classes': 10,
                 'batch_size': 8, 
                 'model_name':'Resnet18',
