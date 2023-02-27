@@ -18,12 +18,12 @@ parameters = { 'num_epochs':100,
                 'num_classes': 10,
                 'batch_size': 8, 
                 'model_name':'Resnet18',
-                #'loss_function':'Evidential',
-                'loss_function': 'Crossentropy',
+                'loss_function':'Evidential',
+                #'loss_function': 'Crossentropy',
                 'lr': 0.001,
                 'weight_decay':1e-5,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'quantise':False}
+                'quantise':True}
 logger = True
 
 if parameters['quantise'] == True:

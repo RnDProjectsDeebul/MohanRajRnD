@@ -26,10 +26,10 @@ models_path = save_path
 parameters = {  'num_classes': 10,
                 'batch_size': 20, 
                 'model_name':'Resnet18',
-                #'loss_function': 'Evidential',
-                'loss_function': 'Crossentropy',
+                'loss_function': 'Evidential',
+                #'loss_function': 'Crossentropy',
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'quantise':False}
+                'quantise':True}
 logger = True
 
 if parameters['quantise'] == True:
@@ -45,13 +45,20 @@ entropy_plot_name = 'entropy_'+condition_name
 calibration_plot_name = 'calibration_'+condition_name
 
 
+if parameters['quantise'] == True:
+    name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
+    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing", "Quant"]
+else:
+    name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
+    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing"]
+
 
 if logger:
     run = neptune.init(
     project="mohan20325145/demoproj",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJhZWQyMTU4OC02NmU4LTRiNjgtYWE5Zi1lNDg5MjdmZGJhNzYifQ==",
-    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing"],
-    name= "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']),
+    tags = tags,
+    name= name,
     )
 else:
     run = None
