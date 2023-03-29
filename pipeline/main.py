@@ -15,22 +15,27 @@ warnings.filterwarnings("ignore")
 data_dir = '../../data'
 save_path = '../../results/'
 parameters = { 'num_epochs':20,
-                'num_classes': 10,
+                'num_classes':10,
                 'batch_size': 32,
                 'model_name':'Resnet18',
-                'loss_function':'Evidential',
-                #'loss_function': 'Crossentropy',
+                #'loss_function':'Evidential',
+                'loss_function': 'Crossentropy',
                 'lr': 0.001,
                 'weight_decay':1e-5,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'quantise':True}
+                'quantise':False}
 logger = True
 
 if parameters['quantise'] == True:
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
+    name = "Training" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
+    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Training", "Quant"]
 else:
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
+    name = "Training" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
+    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Training"]
     
+
 model = get_model(parameters['model_name'],num_classes=parameters['num_classes'],weights='DEFAULT')
 #save_architecture_txt(model=model,dir_path=save_path,filename=parameters['model_name'])
 
@@ -50,14 +55,14 @@ else:
 
 optimizer = torch.optim.Adam(model.parameters(),lr=parameters['lr'], weight_decay=parameters['weight_decay'])
 lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-
+    
  
 if logger:
     run = neptune.init(
     project="mohan20325145/demoproj",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJhZWQyMTU4OC02NmU4LTRiNjgtYWE5Zi1lNDg5MjdmZGJhNzYifQ==",
-    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Training"],
-    name= "Training" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']),
+    tags = tags,
+    name= name,
     )
     run['config/hyperparameters'] = parameters
     run['config/model'] = type(model).__name__

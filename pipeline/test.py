@@ -26,31 +26,27 @@ models_path = save_path
 parameters = {  'num_classes': 10,
                 'batch_size': 20, 
                 'model_name':'Resnet18',
-                'loss_function': 'Evidential',
-                #'loss_function': 'Crossentropy',
+                #'loss_function': 'Evidential',
+                'loss_function': 'Crossentropy',
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'quantise':True}
+                'quantise':False}
 logger = True
 
 if parameters['quantise'] == True:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
+    name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
+    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing", "Quant"]
 else:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_model.pth'
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
+    name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
+    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing"]
 
 
 confusion_matrix_name = 'confusion_matrix_'+condition_name
 entropy_plot_name = 'entropy_'+condition_name
 calibration_plot_name = 'calibration_'+condition_name
-
-
-if parameters['quantise'] == True:
-    name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
-    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing", "Quant"]
-else:
-    name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
-    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing"]
 
 
 if logger:
