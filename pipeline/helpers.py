@@ -28,7 +28,7 @@ def plot_calibration_curve(y_prob, y_true, num_classes, save_path, file_name):
     ax.set_ylabel('True probability')
     ax.legend()
     plt.tight_layout()
-    plt.savefig(save_path+file_name)
+    #plt.savefig(save_path+file_name)
     return fig
 
 
@@ -41,7 +41,7 @@ def plot_entropy_correct_incorrect(data_df, save_path, file_name):
     g = sns.boxplot(
                     data=data_df, y="entropy", x="is_prediction_correct", ax=ax
                 )
-    plt.savefig(save_path+file_name)
+    #plt.savefig(save_path+file_name)
     return fig
 
 
@@ -300,9 +300,9 @@ def plot_confusion_matrix1(true_labels,predicted_labels,class_names,results_path
         plt.xticks(tick_marks, class_names, rotation=45, fontsize=15)
         plt.yticks(tick_marks, class_names, rotation=45,fontsize=15)
         plt.title('Confusion Matrix', fontsize=20)
-        plt.savefig(str(results_path)+str(plot_name)+'.png')
         plt.xlabel("Predicted label",fontsize=20)
         plt.ylabel("True label",fontsize=20)
+        #plt.savefig(str(results_path)+str(plot_name)+'.png')
         return fig
 
 def get_classification_report(true_labels,predicted_labels,classes):
@@ -325,7 +325,7 @@ def plot_losses(train_loss,valid_loss,criterion_name,save_path):
         plt.ylabel(str(criterion_name),fontsize=15)
         plt.title('Loss Plot')
         plt.legend()
-        fig.savefig(str(save_path)+'/losses_plot.png')
+        #fig.savefig(str(save_path)+'/losses_plot.png')
         return fig
 
 def plot_accuracies(train_acc,valid_acc,save_path):
@@ -336,7 +336,7 @@ def plot_accuracies(train_acc,valid_acc,save_path):
         plt.ylabel('Accuracy')
         plt.title("Accuracy Plot")
         plt.legend()
-        fig.savefig(str(save_path)+'/accuracies_plot.png')
+        #fig.savefig(str(save_path)+'/accuracies_plot.png')
         return fig
 
 def imshow(img):

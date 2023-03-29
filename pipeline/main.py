@@ -14,9 +14,9 @@ warnings.filterwarnings("ignore")
 
 data_dir = '../../data'
 save_path = '../../results/'
-parameters = { 'num_epochs':100,
+parameters = { 'num_epochs':20,
                 'num_classes': 10,
-                'batch_size': 8, 
+                'batch_size': 32,
                 'model_name':'Resnet18',
                 'loss_function':'Evidential',
                 #'loss_function': 'Crossentropy',
@@ -45,9 +45,11 @@ else:
     raise NotImplementedError
 
 
-optimizer = torch.optim.SGD(model.parameters(),lr=parameters['lr'], momentum=0.9)
-lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
+#optimizer = torch.optim.SGD(model.parameters(),lr=parameters['lr'], momentum=0.9)
+#lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
 
+optimizer = torch.optim.Adam(model.parameters(),lr=parameters['lr'], weight_decay=parameters['weight_decay'])
+lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
  
 if logger:

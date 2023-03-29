@@ -66,9 +66,8 @@ def train_model(model=None,
                         loss = criterion(outputs, y.float(), epoch, num_classes, 3, device)
                     else:
                         outputs = model(inputs)
-                        loss = criterion(outputs, labels)
-                        
-                    _, preds = torch.max(outputs, 1)
+                        loss = criterion(outputs, labels) 
+                        _, preds = torch.max(outputs, 1)
                     
                     if phase == 'train':
                         loss.backward()

@@ -199,7 +199,7 @@ actual_labels = true_labels.reshape(-1, 1)
 logits_truelabel = np.concatenate((model_output, actual_labels), axis=1)
 logits_df = pd.DataFrame(logits_truelabel)
 logits_save_path = str(save_path)+str(condition_name)+'_logits.csv'
-logits_df.to_csv(path_or_buf=logits_save_path)
+#logits_df.to_csv(path_or_buf=logits_save_path)
 
 if run !=None:
     run['config/hyperparameters'] = parameters
