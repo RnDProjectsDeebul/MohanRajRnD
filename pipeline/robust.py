@@ -26,7 +26,7 @@ parameters = {  'num_classes': 10,
 model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_model.pth'
 
 model = get_model(parameters['model_name'],num_classes=parameters['num_classes'],weights=None)
-model.load_state_dict(torch.load(model_path)) 
+model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'))) 
 
 #model = torchvision.models.resnet18(weights=ResNet18_Weights.DEFAULT)
 
@@ -39,15 +39,15 @@ images, labels = fb.utils.samples(fmodel, dataset='cifar10', batchsize=16)
 
 accuracy = fb.utils.accuracy(fmodel, images, labels)
 print(accuracy)
-
 attack = fb.attacks.LinfDeepFoolAttack()
-raw, clipped, is_adv = attack(fmodel, images, labels, epsilons=0.03)
-accuracy = is_adv.float().mean().item()
-print(accuracy)
+
+# raw, clipped, is_adv = attack(fmodel, images, labels, epsilons=0.03)
+# accuracy = is_adv.float().mean().item()
+# print(accuracy)
 
 epsilons = np.linspace(0.0, 0.005, num=20)
-print(labels)
 raw, clipped, is_adv = attack(fmodel, images, labels, epsilons=epsilons)
+
 robust_accuracy = 1 - is_adv.float().mean(axis=-1)
 print(robust_accuracy)
 plt.plot(epsilons, robust_accuracy.cpu().numpy())
