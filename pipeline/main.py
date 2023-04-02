@@ -16,12 +16,12 @@ data_dir = '../../data'
 save_path = '../../results/'
 parameters = { 'num_epochs':20,
                 'num_classes':10,
-                'batch_size': 32,
+                'batch_size': 128,
                 'model_name':'Resnet18',
                 #'loss_function':'Evidential',
                 'loss_function': 'Crossentropy',
-                'lr': 0.001,
-                'weight_decay':1e-5,
+                'lr': 0.1,
+                'weight_decay':5e-4,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                 'quantise':False}
 logger = True
@@ -53,9 +53,12 @@ else:
 #optimizer = torch.optim.SGD(model.parameters(),lr=parameters['lr'], momentum=0.9)
 #lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
 
-optimizer = torch.optim.Adam(model.parameters(),lr=parameters['lr'], weight_decay=parameters['weight_decay'])
-lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+# optimizer = torch.optim.Adam(model.parameters(),lr=parameters['lr'], weight_decay=parameters['weight_decay'])
+# lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
     
+optimizer = torch.optim.SGD(model.parameters(), lr=parameters['lr'], momentum=0.9, weight_decay=parameters['weight_decay'])
+lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
  
 if logger:
     run = neptune.init(
@@ -73,17 +76,17 @@ else:
 
 
 def load_data(data_dir):
-    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), transforms.RandomErasing()])
-    trainset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True, transform=transform)
-    testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True, transform=transform)   
+    #transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), transforms.RandomErasing()])
+    transform_train = transforms.Compose([transforms.RandomCrop(32, padding=4), transforms.RandomHorizontalFlip(), transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),])
+    transform_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),])
+    trainset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True, transform=transform_train)
+    testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True, transform=transform_test)   
     return trainset, testset
 
 
 trainset, testset = load_data(data_dir)
-train_sub_len = int(len(trainset) * 0.75)
-train_subset, val_subset = torch.utils.data.random_split(trainset, [train_sub_len, len(trainset) - train_sub_len])
-trainloader = torch.utils.data.DataLoader(train_subset, batch_size=40, shuffle=True, num_workers=2) #parameters['batch_size']
-valloader = torch.utils.data.DataLoader(val_subset, batch_size=20, shuffle=False, num_workers=2)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=parameters['batch_size'], shuffle=True, num_workers=2)
+valloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 dataloaders = {"train": trainloader, "val": valloader}
 class_names = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 

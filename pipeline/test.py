@@ -24,7 +24,7 @@ save_path = '../../results/'
 models_path = save_path
 
 parameters = {  'num_classes': 10,
-                'batch_size': 20, 
+                'batch_size': 100, 
                 'model_name':'Resnet18',
                 #'loss_function': 'Evidential',
                 'loss_function': 'Crossentropy',
@@ -61,21 +61,19 @@ else:
 
 
 def load_test_data(data_dir):
-    transform = transforms.Compose([transforms.ToTensor(),transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)), transforms.RandomErasing()])
-    trainset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True, transform=transform)
-    testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True, transform=transform)   
-    return trainset, testset
+    transform_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),])
+    testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True, transform=transform_test)     
+    return testset
 
 
-trainset, testset = load_test_data(data_dir)
-testloader = torch.utils.data.DataLoader(testset, batch_size=20, shuffle=False, num_workers=2)
+testset = load_test_data(data_dir)
+testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 dataloader = {"test": testloader}
+test_loader = dataloader['test']
 class_names = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
     
     
 device = parameters['device']
-
-
 model = get_model(parameters['model_name'],num_classes=parameters['num_classes'],weights=None)
 
 if parameters['quantise'] == True:
@@ -96,14 +94,12 @@ if parameters['quantise'] == True:
     
     
 model.load_state_dict(torch.load(model_path))  
-
 #model = torch.load(model_path)
 model.eval()
 model.to(device=device)
 
-test_loader = dataloader['test']
 
-print("Number of test images : ",len(test_loader)*parameters['batch_size'])
+print("Number of test images : ",len(test_loader))
 
 results = test_one_epoch(model=model,
                          dataloader=test_loader,
@@ -163,12 +159,12 @@ if parameters['loss_function']=='Crossentropy':
     entropy_values = get_multinomial_entropy(probabilities)
     entropy_values_df = pd.DataFrame(entropy_values)
     entropy_values_save_path = str(save_path)+str(condition_name)+'_entropy(probabilities).csv'
-    entropy_values_df.to_csv(path_or_buf=entropy_values_save_path)
+    #entropy_values_df.to_csv(path_or_buf=entropy_values_save_path)
     
     entropy_val = get_multinomial_entropy(model_output)
     entropy_val_df = pd.DataFrame(entropy_val)
     entropy_val_save_path = str(save_path)+str(condition_name)+'_entropy(logits).csv'
-    entropy_val_df.to_csv(path_or_buf=entropy_val_save_path)
+    #entropy_val_df.to_csv(path_or_buf=entropy_val_save_path)
 
 
 elif parameters['loss_function']== 'Evidential':
