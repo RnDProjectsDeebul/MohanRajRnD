@@ -26,8 +26,8 @@ models_path = save_path
 parameters = {  'num_classes': 10,
                 'batch_size': 100, 
                 'model_name':'Resnet18',
-                #'loss_function': 'Evidential',
-                'loss_function': 'Crossentropy',
+                'loss_function': 'Evidential',
+                #'loss_function': 'Crossentropy',
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                 'quantise':False}
 logger = True

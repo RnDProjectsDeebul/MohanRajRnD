@@ -14,12 +14,12 @@ warnings.filterwarnings("ignore")
 
 data_dir = '../../data'
 save_path = '../../results/'
-parameters = { 'num_epochs':20,
+parameters = { 'num_epochs':200,
                 'num_classes':10,
                 'batch_size': 128,
                 'model_name':'Resnet18',
-                #'loss_function':'Evidential',
-                'loss_function': 'Crossentropy',
+                'loss_function':'Evidential',
+                #'loss_function': 'Crossentropy',
                 'lr': 0.1,
                 'weight_decay':5e-4,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
