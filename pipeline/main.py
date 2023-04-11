@@ -14,12 +14,12 @@ warnings.filterwarnings("ignore")
 
 data_dir = '../../data'
 save_path = '../../results/'
-parameters = { 'num_epochs':200,
+parameters = { 'num_epochs':15,
                 'num_classes':10,
                 'batch_size': 128,
                 'model_name':'Resnet18',
-                'loss_function':'Evidential',
-                #'loss_function': 'Crossentropy',
+                #'loss_function':'Evidential',
+                'loss_function': 'Crossentropy',
                 'lr': 0.1,
                 'weight_decay':5e-4,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
@@ -61,8 +61,8 @@ lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
  
 if logger:
-    run = neptune.init(
-    project="mohan20325145/demoproj",
+    run = neptune.init_run(
+    project="mohan20325145/CIFAR10",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJhZWQyMTU4OC02NmU4LTRiNjgtYWE5Zi1lNDg5MjdmZGJhNzYifQ==",
     tags = tags,
     name= name,
