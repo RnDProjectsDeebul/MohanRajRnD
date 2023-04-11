@@ -13,6 +13,7 @@ import seaborn as sns
 import sys
 import matplotlib.image as mpimg
 from sklearn.calibration import calibration_curve
+from lenet import LeNet
 
 
 
@@ -89,10 +90,12 @@ def get_model(model_name,num_classes,weights):
         model = resnet18(weights = ResNet18_Weights.DEFAULT)
         assert model.__class__.__name__ == 'ResNet'
         model.fc = nn.Linear(in_features=512,out_features=num_classes)
-    elif model_name == 'Mobilenetv2':
+    elif model_name == 'MobileNetV2':
         model = mobilenet_v2(weights=weights)
         assert model.__class__.__name__ == 'MobileNetV2'
         model.classifier[1] = nn.Linear(in_features=1280,out_features=num_classes)
+    elif model_name == 'LeNet':
+        model = LeNet()
     return model
 
 # Cross entropy and evidential test code.

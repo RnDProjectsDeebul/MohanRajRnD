@@ -10,9 +10,10 @@ import os
 import copy
 import numpy as np
 import pandas as pd
-import neptune.new as neptune
+import neptune
 import matplotlib.pyplot as plt
 from helpers import get_multinomial_entropy,get_dirchlet_entropy,plot_calibration_curve
+from data import import_data
 from torch.quantization import quantize_fx
 import warnings
 warnings.filterwarnings("ignore")
@@ -24,24 +25,26 @@ save_path = '../../results/'
 models_path = save_path
 
 parameters = {  'num_classes': 10,
-                'batch_size': 100, 
-                'model_name':'Resnet18',
-                'loss_function': 'Evidential',
-                #'loss_function': 'Crossentropy',
+                'batch_size': 128, 
+                'model_name':'LeNet',#'Resnet18',
+                #'loss_function': 'Evidential',
+                'loss_function': 'Crossentropy',
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'quantise':False}
-logger = True
+                'dataset': "MNIST",
+                #'dataset': "CIFAR10",
+                'quantise':True}
+logger = False
 
 if parameters['quantise'] == True:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
     name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
-    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing", "Quant"]
+    tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Testing", "Quant"]
 else:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_model.pth'
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
     name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
-    tags = [str(parameters['loss_function']),str(parameters['model_name']),"CIFAR10","Testing"]
+    tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Testing"]
 
 
 confusion_matrix_name = 'confusion_matrix_'+condition_name
@@ -50,8 +53,9 @@ calibration_plot_name = 'calibration_'+condition_name
 
 
 if logger:
-    run = neptune.init(
-    project="mohan20325145/demoproj",
+    run = neptune.init_run(
+    #project="mohan20325145/CIFAR10",
+    project="mohan20325145/MNIST",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJhZWQyMTU4OC02NmU4LTRiNjgtYWE5Zi1lNDg5MjdmZGJhNzYifQ==",
     tags = tags,
     name= name,
@@ -60,24 +64,14 @@ else:
     run = None
 
 
-def load_test_data(data_dir):
-    transform_test = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),])
-    testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True, transform=transform_test)     
-    return testset
-
-
-testset = load_test_data(data_dir)
-testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
-dataloader = {"test": testloader}
-test_loader = dataloader['test']
-class_names = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-    
-    
+dataloader, class_names = import_data(parameters['dataset'], data_dir, parameters['batch_size'], parameters['batch_size'])
+test_loader = dataloader['val']
 device = parameters['device']
 model = get_model(parameters['model_name'],num_classes=parameters['num_classes'],weights=None)
 
+
 if parameters['quantise'] == True:
-    dataiter = iter(dataloader['test'])
+    dataiter = iter(dataloader['val'])
     images, labels = next(dataiter)
 
     m = copy.deepcopy(model)
@@ -91,15 +85,16 @@ if parameters['quantise'] == True:
             images, labels = next(dataiter)
             model_prepared(images)
     model = quantize_fx.convert_fx(model_prepared)
+    print("Model quantised, q-weights need be updated")
     
     
 model.load_state_dict(torch.load(model_path))  
 #model = torch.load(model_path)
 model.eval()
+print("Loading trained weights and eval mode is successful")
 model.to(device=device)
 
-
-print("Number of test images : ",len(test_loader))
+print("Number of test images : ",len(test_loader)*parameters['batch_size'])
 
 results = test_one_epoch(model=model,
                          dataloader=test_loader,
