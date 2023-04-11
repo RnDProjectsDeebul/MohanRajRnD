@@ -3,7 +3,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import random_split
 from torch import nn
-import neptune.new as neptune
+import neptune
 
 from train import train_model
 from helpers import save_architecture_txt,get_model
