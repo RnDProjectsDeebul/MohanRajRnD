@@ -32,18 +32,20 @@ parameters = {  'num_classes': 10,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                 'dataset': "MNIST",
                 #'dataset': "CIFAR10",
-                'quantise':True}
-logger = False
+                'quantise':False}
+logger = True
 
 if parameters['quantise'] == True:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
+    entropy_df_condition = str(parameters['loss_function'])+'-Quant'
     name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
     tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Testing", "Quant"]
     parameters['device'] = "cpu"
 else:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_model.pth'
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
+    entropy_df_condition = str(parameters['loss_function'])
     name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
     tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Testing"]
 
@@ -171,10 +173,12 @@ results_dict = {
     "entropy": entropy_values,
     "true_labels": true_labels,
     "pred_labels":pred_labels,
+    "condition":entropy_df_condition,
 }
 results_df = pd.DataFrame(results_dict)
 results_df = results_df.astype({'entropy': 'float64'})
 results_df['is_prediction_correct'] = results_df['true_labels'] == results_df['pred_labels']
+results_df.to_csv(path_or_buf= save_path+condition_name+'_entropy.csv')
 
 #Plot entropy
 entropy_plot_fig = plot_entropy_correct_incorrect(data_df=results_df, save_path=save_path, file_name=entropy_plot_name)

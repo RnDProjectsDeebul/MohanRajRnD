@@ -17,7 +17,7 @@ from data import import_data
 
 data_dir = '../../data'
 save_path = '../../results/'
-parameters = { 'num_epochs':5,
+parameters = { 'num_epochs':50,
                 'num_classes':10,
                 'batch_size': 128,
                 'model_name':'LeNet',#'Resnet18',#"MobileNetV2"
@@ -29,7 +29,7 @@ parameters = { 'num_epochs':5,
                 'dataset': "MNIST",
                 #'dataset': "CIFAR10",
                 'quantise': True}
-logger = False
+logger = True
 
 std_condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
 quant_condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
@@ -97,7 +97,7 @@ train_model(model=model,
             class_names = class_names ,
             logger=run,
             results_file_path =save_path,
-            condition_name=std_condition_name,
+            condition_name=save_path+str(std_condition_name)+'_loss_acc.csv',
             quantise=parameters['quantise'],
             std_path_to_save=save_path+str(std_condition_name)+'_model.pth',
             quant_path_to_save=save_path+str(quant_condition_name)+'_model.pth')

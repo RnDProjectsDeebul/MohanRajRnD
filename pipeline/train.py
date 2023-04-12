@@ -30,6 +30,7 @@ def train_model(model=None,
     if torch.cuda.is_available():
         model.to(device)
 
+    loss_acc_dict = {"epoch_no": [],"train_loss": [],"val_loss": [],"train_acc": [],"val_acc": []}
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
@@ -90,21 +91,31 @@ def train_model(model=None,
             epoch_loss = running_loss / (epoch+1)
             epoch_acc = 100.*running_corrects / total
 
-            if phase == "train" and logger!= None:
-                logger['plots/training/train/loss'].log(epoch_loss)
-                logger['plots/training/train/accuracy'].log(epoch_acc)
-            elif phase == "val" and logger!= None:
-                logger['plots/training/val/loss'].log(epoch_loss)
-                logger['plots/training/val/accuracy'].log(epoch_acc)
+            
+            if phase == "train":
+                loss_acc_dict['train_loss'].append(epoch_loss)
+                loss_acc_dict['train_acc'].append(epoch_acc)
+                if logger!= None:
+                    logger['plots/training/train/loss'].log(epoch_loss)
+                    logger['plots/training/train/accuracy'].log(epoch_acc)
+            elif phase == "val":
+                loss_acc_dict['val_loss'].append(epoch_loss)
+                loss_acc_dict['val_acc'].append(epoch_acc)
+                if logger!=None:
+                    logger['plots/training/val/loss'].log(epoch_loss)
+                    logger['plots/training/val/accuracy'].log(epoch_acc)
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
             if phase == 'val' and epoch_acc > best_acc:
                 best_model_wts = copy.deepcopy(model.state_dict())
                 best_acc = epoch_acc
 
+        loss_acc_dict['epoch_no'].append(epoch+1)
         scheduler.step()
         print ("LR :", scheduler.get_lr())
                 
+    loss_acc_df = pd.DataFrame(loss_acc_dict, columns=["epoch_no","train_loss","val_loss","train_acc","val_acc"])
+    loss_acc_df.to_csv(path_or_buf=condition_name)
     
     model.load_state_dict(best_model_wts)
     torch.save(model.state_dict(), std_path_to_save)

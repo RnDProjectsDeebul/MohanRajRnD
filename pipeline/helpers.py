@@ -24,7 +24,7 @@ def plot_calibration_curve(y_prob, y_true, num_classes, save_path, file_name):
     for i in range(num_classes):
         prob_true, prob_pred = calibration_curve(y_true == i, y_prob[:, i], n_bins=10)
         ax.plot(prob_pred, prob_true, "s-", label="Class %d" % i)
-    ax.set_title('Calibration curves for CIFAR-10 classes')
+    ax.set_title('Calibration curve')
     ax.set_xlabel('Predicted probability')
     ax.set_ylabel('True probability')
     ax.legend()
@@ -39,9 +39,7 @@ def plot_entropy_correct_incorrect(data_df, save_path, file_name):
 
     d = {True: 'correct', False: 'incorrect'}
     data_df['is_prediction_correct'] = data_df['is_prediction_correct'].replace(d)
-    g = sns.boxplot(
-                    data=data_df, y="entropy", x="is_prediction_correct", ax=ax
-                )
+    g = sns.boxplot(data=data_df, y="entropy", x="is_prediction_correct", ax=ax)
     #plt.savefig(save_path+file_name)
     return fig
 
