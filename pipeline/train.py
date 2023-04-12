@@ -20,7 +20,9 @@ def train_model(model=None,
                 logger=None,
                 results_file_path = None,
                 condition_name=None,
-                quantise=False):
+                quantise=False,
+                std_path_to_save='./',
+                quant_path_to_save='./'):
 
 
     num_classes = len(class_names)
@@ -105,6 +107,7 @@ def train_model(model=None,
                 
     
     model.load_state_dict(best_model_wts)
+    torch.save(model.state_dict(), std_path_to_save)
     
     if quantise:
         dataiter = iter(dataloaders['train'])
@@ -121,7 +124,5 @@ def train_model(model=None,
                 images, labels = next(dataiter)
                 model_prepared(images)
         model_quantized = quantize_fx.convert_fx(model_prepared)
-        return model_quantized
+        torch.save(model_quantized.state_dict(), quant_path_to_save)
         
-        
-    return model

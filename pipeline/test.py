@@ -27,8 +27,8 @@ models_path = save_path
 parameters = {  'num_classes': 10,
                 'batch_size': 128, 
                 'model_name':'LeNet',#'Resnet18',
-                #'loss_function': 'Evidential',
-                'loss_function': 'Crossentropy',
+                'loss_function': 'Evidential',
+                #'loss_function': 'Crossentropy',
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                 'dataset': "MNIST",
                 #'dataset': "CIFAR10",
@@ -40,6 +40,7 @@ if parameters['quantise'] == True:
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
     name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
     tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Testing", "Quant"]
+    parameters['device'] = "cpu"
 else:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_model.pth'
     condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
@@ -73,6 +74,7 @@ model = get_model(parameters['model_name'],num_classes=parameters['num_classes']
 if parameters['quantise'] == True:
     dataiter = iter(dataloader['val'])
     images, labels = next(dataiter)
+    print(images.shape)
 
     m = copy.deepcopy(model)
     m.to("cpu")
@@ -99,8 +101,7 @@ print("Number of test images : ",len(test_loader)*parameters['batch_size'])
 results = test_one_epoch(model=model,
                          dataloader=test_loader,
                          device=device,
-                         loss_function=parameters['loss_function']
-                         )
+                         loss_function=parameters['loss_function'])
 
 # seperate the results
 true_labels = results['true_labels']

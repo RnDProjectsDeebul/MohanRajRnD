@@ -21,8 +21,8 @@ parameters = { 'num_epochs':5,
                 'num_classes':10,
                 'batch_size': 128,
                 'model_name':'LeNet',#'Resnet18',#"MobileNetV2"
-                #'loss_function':'Evidential',
-                'loss_function': 'Crossentropy',
+                'loss_function':'Evidential',
+                #'loss_function': 'Crossentropy',
                 'lr': 0.1,
                 'weight_decay':5e-4,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
@@ -31,15 +31,14 @@ parameters = { 'num_epochs':5,
                 'quantise': True}
 logger = False
 
+std_condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
+quant_condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
 
-if parameters['quantise'] == True:
-    condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
-    name = "Training" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
-    tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Training", "Quant"]
-else:
-    condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
-    name = "Training" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
-    tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Training"]
+# if parameters['quantise'] == True:
+#     name = "Training" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
+#     tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Training", "Quant"]
+name = "Training" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
+tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Training"]
     
 
 
@@ -88,21 +87,22 @@ else:
 
 
 
-training_results = train_model(model=model,
-                                num_epochs=parameters['num_epochs'],
-                                uncertainty = uncertainty,
-                                criterion=loss_function,
-                                optimizer=optimizer,
-                                scheduler=lr_scheduler,
-                                dataloaders=dataloaders,
-                                class_names = class_names ,
-                                logger=run,
-                                results_file_path =save_path,
-                                condition_name=condition_name,
-                                quantise=parameters['quantise'])
+train_model(model=model,
+            num_epochs=parameters['num_epochs'],
+            uncertainty = uncertainty,
+            criterion=loss_function,
+            optimizer=optimizer,
+            scheduler=lr_scheduler,
+            dataloaders=dataloaders,
+            class_names = class_names ,
+            logger=run,
+            results_file_path =save_path,
+            condition_name=std_condition_name,
+            quantise=parameters['quantise'],
+            std_path_to_save=save_path+str(std_condition_name)+'_model.pth',
+            quant_path_to_save=save_path+str(quant_condition_name)+'_model.pth')
 
 
-best_model = training_results
+
 #save_architecture_txt(model=best_model,dir_path=save_path,filename=parameters['model_name']+"_quant")
-torch.save(best_model.state_dict(), save_path+str(condition_name)+'_model.pth')
 #torch.save(best_model, save_path+str(condition_name)+'_model.pth')
