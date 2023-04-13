@@ -7,6 +7,7 @@ from torch import nn
 from helpers import get_model, test_one_epoch, get_brier_score, get_expected_calibration_error,get_best_worst_predictions,plot_predicted_images,plot_entropy_correct_incorrect
 from helpers import get_accuracy_score,get_precision_score,get_recall_score,get_f1_score,get_classification_report,plot_confusion_matrix1
 import os
+import time
 import copy
 import numpy as np
 import pandas as pd
@@ -32,8 +33,8 @@ parameters = {  'num_classes': 10,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                 'dataset': "MNIST",
                 #'dataset': "CIFAR10",
-                'quantise':False}
-logger = True
+                'quantise':True}
+logger = False
 
 if parameters['quantise'] == True:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
@@ -74,7 +75,7 @@ model = get_model(parameters['model_name'],num_classes=parameters['num_classes']
 
 
 if parameters['quantise'] == True:
-    dataiter = iter(dataloader['val'])
+    dataiter = iter(dataloader['train'])
     images, labels = next(dataiter)
     print(images.shape)
 
@@ -100,10 +101,12 @@ model.to(device=device)
 
 print("Number of test images : ",len(test_loader)*parameters['batch_size'])
 
+since = time.time()
 results = test_one_epoch(model=model,
                          dataloader=test_loader,
                          device=device,
                          loss_function=parameters['loss_function'])
+time_elapsed = round(time.time() - since, 3)
 
 # seperate the results
 true_labels = results['true_labels']
@@ -134,10 +137,13 @@ print('--'*20)
 print("F1 score : ", f1_score)
 print('--'*20)
 print("\nClassification report : ",classification_report)
+print('--'*20)
+print("\nInference time for ", true_labels.shape[0] ," image is : ", time_elapsed, "seconds")
+print('--'*20)
 
 # Uncertainty metrics
 brier_score = get_brier_score(y_true=true_labels,y_pred_probs=probabilities)
-print("\n Shape of true labels is : ",true_labels.shape)
+#print("\n Shape of true labels is : ",true_labels.shape)
 expected_calibration_error = get_expected_calibration_error(y_true=true_labels,y_pred=probabilities)
 
 print("Brier Score : ", round(brier_score,5))
@@ -174,6 +180,13 @@ results_dict = {
     "true_labels": true_labels,
     "pred_labels":pred_labels,
     "condition":entropy_df_condition,
+    "accuracy":accuracy_score,
+    "precision":precision_score,
+    "recall_score":recall_score,
+    "f1score":f1_score,
+    "brierscore":brier_score,
+    "expectedcalibrationerror":expected_calibration_error,
+    "inferencetime":time_elapsed,
 }
 results_df = pd.DataFrame(results_dict)
 results_df = results_df.astype({'entropy': 'float64'})

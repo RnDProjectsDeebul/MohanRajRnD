@@ -15,7 +15,7 @@ class LeNet(nn.Module):
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 1))
         x = F.relu(F.max_pool2d(self.conv2(x), 1))
-        x = x.view(x.size()[0], -1)
+        x = x.reshape(x.size()[0], -1)
         x = F.relu(self.fc1(x))
         if self.use_dropout:
             x = F.dropout(x, training=self.training)
