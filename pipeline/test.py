@@ -27,14 +27,15 @@ models_path = save_path
 
 parameters = {  'num_classes': 10,
                 'batch_size': 128, 
-                'model_name':'LeNet',#'Resnet18',
+                #'model_name':'LeNet',
+                'model_name':'Resnet18',
                 'loss_function': 'Evidential',
                 #'loss_function': 'Crossentropy',
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'dataset': "MNIST",
-                #'dataset': "CIFAR10",
-                'quantise':True}
-logger = False
+                #'dataset': "MNIST",
+                'dataset': "CIFAR10",
+                'quantise':False}
+logger = True
 
 if parameters['quantise'] == True:
     model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'

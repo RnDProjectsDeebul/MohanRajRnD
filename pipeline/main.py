@@ -20,15 +20,15 @@ save_path = '../../results/'
 parameters = { 'num_epochs':50,
                 'num_classes':10,
                 'batch_size': 128,
-                'model_name':'LeNet',
-                #'model_name':'Resnet18',#"MobileNetV2"
-                #'loss_function':'Evidential',
-                'loss_function': 'Crossentropy',
+                #'model_name':'LeNet',
+                'model_name':'Resnet18',#"MobileNetV2"
+                'loss_function':'Evidential',
+                #'loss_function': 'Crossentropy',
                 'lr': 0.1,
                 'weight_decay':5e-4,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'dataset': "MNIST",
-                #'dataset': "CIFAR10",
+                #'dataset': "MNIST",
+                'dataset': "CIFAR10",
                 'quantise': True}
 logger = True
 
