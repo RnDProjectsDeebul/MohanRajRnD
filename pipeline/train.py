@@ -166,13 +166,13 @@ def train_model(model=None,
             epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
             
             if phase == "train":
-                loss_acc_dict['train_loss'].append(epoch_loss.cpu().detach().numpy())
+                loss_acc_dict['train_loss'].append(epoch_loss)
                 loss_acc_dict['train_acc'].append(epoch_acc.cpu().detach().numpy())
                 if logger!= None:
                     logger['plots/training/train/loss'].log(epoch_loss)
                     logger['plots/training/train/accuracy'].log(epoch_acc)
             elif phase == "val":
-                loss_acc_dict['val_loss'].append(epoch_loss.cpu().detach().numpy())
+                loss_acc_dict['val_loss'].append(epoch_loss)
                 loss_acc_dict['val_acc'].append(epoch_acc.cpu().detach().numpy())
                 if logger!=None:
                     logger['plots/training/val/loss'].log(epoch_loss)
