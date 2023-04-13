@@ -14,8 +14,8 @@ def get_mnist(data_dir, train_batch_size, val_batch_size):
                      download=True,
                      transform=transforms.Compose([transforms.ToTensor()]))
     
-    dataloader_train = DataLoader(data_train, batch_size=train_batch_size, shuffle=True, num_workers=8)
-    dataloader_val   = DataLoader(data_val, batch_size=val_batch_size, num_workers=8)
+    dataloader_train = DataLoader(data_train, batch_size=1000, shuffle=True, num_workers=8)
+    dataloader_val   = DataLoader(data_val, batch_size=1000, num_workers=8)
     
     dataloaders = {"train": dataloader_train, "val": dataloader_val}
     class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
