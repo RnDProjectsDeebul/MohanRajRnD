@@ -105,6 +105,7 @@ print("Number of test images : ",len(test_loader)*parameters['batch_size'])
 since = time.time()
 results = test_one_epoch(model=model,
                          dataloader=test_loader,
+                         num_classes=len(class_names),
                          device=device,
                          loss_function=parameters['loss_function'])
 time_elapsed = round(time.time() - since, 3)
@@ -112,14 +113,9 @@ time_elapsed = round(time.time() - since, 3)
 # seperate the results
 true_labels = results['true_labels']
 pred_labels = results['pred_labels']
-confidences = results['confidences']
 probabilities = results['probabilities']
 model_output = results['model_output']
-images_list = results['images_list']
-labels_list = results['labels_list']
 
-# Get best and worst predictions
-best_predictions,worst_predictions = get_best_worst_predictions(confidences)
 
 # classification metrics
 accuracy_score = round(get_accuracy_score(true_labels=true_labels,predicted_labels=pred_labels),3)
@@ -127,8 +123,11 @@ precision_score = round(get_precision_score(true_labels,pred_labels),3)
 recall_score = round(get_recall_score(true_labels,pred_labels),3)
 f1_score = round(get_f1_score(true_labels,pred_labels),3)
 classification_report = get_classification_report(true_labels,pred_labels,class_names)
-
-# Print results
+confusion_mat_fig = plot_confusion_matrix1(true_labels=true_labels,
+                                            predicted_labels=pred_labels,
+                                            class_names=class_names,
+                                            results_path=save_path,
+                                            plot_name=confusion_matrix_name)
 print("Accuracy score : ", accuracy_score)
 print('--'*20)
 print("Precision score : ", precision_score)
@@ -139,43 +138,30 @@ print("F1 score : ", f1_score)
 print('--'*20)
 print("\nClassification report : ",classification_report)
 print('--'*20)
-print("\nInference time for ", true_labels.shape[0] ," image is : ", time_elapsed, "seconds")
-print('--'*20)
+
+
 
 # Uncertainty metrics
 brier_score = get_brier_score(y_true=true_labels,y_pred_probs=probabilities)
-#print("\n Shape of true labels is : ",true_labels.shape)
 expected_calibration_error = get_expected_calibration_error(y_true=true_labels,y_pred=probabilities)
-
+calibration_curve_fig = plot_calibration_curve(y_prob=probabilities, y_true=true_labels, num_classes=parameters['num_classes'],                                                             save_path=save_path, file_name=calibration_plot_name)
+if parameters['loss_function']=='Crossentropy':
+    entropy_values = get_multinomial_entropy(probabilities)
+elif parameters['loss_function']== 'Evidential':
+    entropy_values = get_dirchlet_entropy(model_output)
 print("Brier Score : ", round(brier_score,5))
 print('--'*20)
 print("Expected calibration error : ", round(expected_calibration_error,5))
-
-# Plot confusion matrix
-confusion_mat_fig = plot_confusion_matrix1(true_labels=true_labels,
-                                            predicted_labels=pred_labels,
-                                            class_names=class_names,
-                                            results_path=save_path,
-                                            plot_name=confusion_matrix_name)
-
+print('--'*20)
     
-# Calculate entropy values
-if parameters['loss_function']=='Crossentropy':
-    entropy_values = get_multinomial_entropy(probabilities)
-    entropy_values_df = pd.DataFrame(entropy_values)
-    entropy_values_save_path = str(save_path)+str(condition_name)+'_entropy(probabilities).csv'
-    #entropy_values_df.to_csv(path_or_buf=entropy_values_save_path)
     
-    entropy_val = get_multinomial_entropy(model_output)
-    entropy_val_df = pd.DataFrame(entropy_val)
-    entropy_val_save_path = str(save_path)+str(condition_name)+'_entropy(logits).csv'
-    #entropy_val_df.to_csv(path_or_buf=entropy_val_save_path)
-
-
-elif parameters['loss_function']== 'Evidential':
-    entropy_values = get_dirchlet_entropy(model_output)
     
-
+# Other metrics
+print("Inference time for ", true_labels.shape[0] ," image is : ", time_elapsed, "seconds")  
+    
+    
+    
+    
 results_dict = {
     "entropy": entropy_values,
     "true_labels": true_labels,
@@ -194,11 +180,7 @@ results_df = results_df.astype({'entropy': 'float64'})
 results_df['is_prediction_correct'] = results_df['true_labels'] == results_df['pred_labels']
 results_df.to_csv(path_or_buf= save_path+condition_name+'_entropy.csv')
 
-#Plot entropy
-entropy_plot_fig = plot_entropy_correct_incorrect(data_df=results_df, save_path=save_path, file_name=entropy_plot_name)
 
-#Plot calibration curve
-calibration_curve_fig = plot_calibration_curve(y_prob=probabilities, y_true=true_labels, num_classes=parameters['num_classes'],                                                             save_path=save_path, file_name=calibration_plot_name)
 
 #save model logits as csv
 actual_labels = true_labels.reshape(-1, 1)
@@ -207,6 +189,10 @@ logits_df = pd.DataFrame(logits_truelabel)
 logits_save_path = str(save_path)+str(condition_name)+'_logits.csv'
 #logits_df.to_csv(path_or_buf=logits_save_path)
 
+
+
+
+entropy_plot_fig = plot_entropy_correct_incorrect(data_df=results_df, save_path=save_path, file_name=entropy_plot_name)
 if run !=None:
     run['config/hyperparameters'] = parameters
     run['config/model'] = type(model).__name__

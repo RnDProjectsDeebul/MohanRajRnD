@@ -97,115 +97,78 @@ def get_model(model_name,num_classes,weights):
     return model
 
 # Cross entropy and evidential test code.
-def test_one_epoch(dataloader,model,device,loss_function):
+def test_one_epoch(dataloader,num_classes,model,device,loss_function):
     print("Started testing")    
-    
-    images_list = []
-    labels_list = []
 
     true_labels = []
     predicted_labels = []
 
     softmax_probabilities = []
-    softmax_confidences = []
     cross_entropy_output = []
 
     evidential_probabilities = []
     dirichlet_alpha_output = []
-    evidential_confidences = []
+    
+    uncertainty = []
 
     # Begin testing
     with torch.no_grad():
         for batch_idx,(inputs,labels) in enumerate(dataloader):
             inputs,labels = inputs.to(device),labels.to(device)
-            
-            for image,label in zip(inputs,labels):
-                images_list.append(image)
-                labels_list.append(label.cpu().numpy)
-            # CROSS ENTROPY
-            if loss_function == 'Crossentropy':
-                #print("Testing for cross entropy loss")  
+                
+            if loss_function == 'Crossentropy': 
                 model.eval()
                 model.to(device=device)
-                # Get the logits
-                logits = model(inputs)
-                # Save the logits
-                cross_entropy_output.extend(logits.cpu().numpy())
-                # Softmax output
-                outputs = torch.softmax(logits,dim=1)
-                # Save softmax output
-                softmax_probabilities.extend(outputs.cpu().numpy())
-                # Get the confidences
-                confidences,predictions = torch.max(outputs,1)
-                # Save confidences
-                softmax_confidences.extend(confidences.cpu().numpy())
-                # Save predicted labels.
+                
+                output = model(inputs)
+                cross_entropy_output.extend(output.cpu().numpy())
+                
+                _,predictions = torch.max(output,1)
                 predicted_labels.extend(predictions.cpu().numpy())
-                # Save true labels
                 true_labels.extend(labels.cpu().numpy())
-            # EVIDENTIAL
-            elif loss_function == 'Evidential':
-                #print("Testing for evidential loss")  
+                
+                probs = torch.softmax(output,dim=1)
+                softmax_probabilities.extend(probs.cpu().numpy())
+                 
+            elif loss_function == 'Evidential': 
                 model.eval()
                 model.to(device=device)
-                # Get the logits
-                logits = model(inputs)
-                # print("logits",logits.shape)
-                # Save alpha values for evidential entropy calculation
-                evidence = relu_evidence(logits)
+                
+                output = model(inputs)
+                evidence = relu_evidence(output)
                 alpha = evidence + 1
-                # print("alpha",alpha.shape)
-                # Save the dirchlet logits
                 dirichlet_alpha_output.extend(alpha.cpu().numpy())
-                # print("alpha outputs",len(dirichlet_alpha_output))
-                # # Save true labels
+                
+                _,predictions = torch.max(output,1)
+                predicted_labels.extend(predictions.cpu().numpy())
                 true_labels.extend(labels.cpu().numpy())
+                
+                probs = alpha / torch.sum(alpha, dim=1, keepdim=True)
+                evidential_probabilities.extend(probs.cpu().numpy())
+                
+                u = num_classes / torch.sum(alpha, dim=1, keepdim=True)
+                uncertainty.extend(u.cpu().numpy())
 
 
-    # Save cross entropy results
-    if loss_function == 'Crossentropy':
-        # Convert the results to numpy arrays
-        softmax_probs_array = [i/np.sum(i) for i in softmax_probabilities]
-        pred_labels_array = np.array(predicted_labels)
-        true_labels_array = np.array(true_labels)
-        cross_entropy_logits_array = np.array(cross_entropy_output)
-        softmax_confidences_array = np.array(softmax_confidences)
-
+    if loss_function == 'Crossentropy':    
         ce_results_dict = {
-                        "true_labels":true_labels_array,
-                        "pred_labels":pred_labels_array,
-                        "probabilities":np.array(softmax_probs_array),
-                        "model_output":cross_entropy_logits_array,
-                        "images_list": images_list,
-                        "labels_list": labels_list,
-                        "confidences": softmax_confidences_array
+                        "true_labels":np.array(true_labels),
+                        "pred_labels":np.array(predicted_labels),
+                        "probabilities":np.array(softmax_probabilities),
+                        "model_output":np.array(cross_entropy_output),
         }
         return ce_results_dict
         
-    # Save evidential results
     elif loss_function == 'Evidential':
-        
-        evidential_probabilities = [i/np.sum(i) for i in dirichlet_alpha_output]
-        evidential_probs_array = np.array(evidential_probabilities)
-        evidential_confidences =np.max(evidential_probs_array,axis=1)
-        predicted_labels =np.argmax(evidential_probs_array,axis=1)
-        # Convert the results to numpy arrays
-        evidential_logits_array = np.array(dirichlet_alpha_output)
-        evidential_confidences_array = np.array(evidential_confidences)
-        pred_labels_array = np.array(predicted_labels)
-        true_labels_array = np.array(true_labels)
-        
         evi_results_dict = {
-                        "true_labels":true_labels_array,
-                        "pred_labels":pred_labels_array,
-                        "probabilities":evidential_probs_array,
-                        "model_output":evidential_logits_array,
-                        "images_list": images_list,
-                        "labels_list": labels_list,
-                        "confidences": evidential_confidences_array
+                        "true_labels":np.array(true_labels),
+                        "pred_labels":np.array(predicted_labels),
+                        "probabilities":np.array(evidential_probabilities),
+                        "model_output":np.array(dirichlet_alpha_output),
         }
         return evi_results_dict
 
+    
 def get_best_worst_predictions(confidence_array):
     confidences_idxs_sorted = np.argsort(confidence_array)
     best_predictions = confidences_idxs_sorted[-9 : ]
