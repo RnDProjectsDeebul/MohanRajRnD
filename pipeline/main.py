@@ -16,7 +16,8 @@ from data import import_data
 
 
 data_dir = '../../data'
-save_path = '../../results/'
+save_path = '../results/'
+models_path = '../../results/'
 parameters = { 'num_epochs':50,
                 'num_classes':10,
                 'batch_size': 128,
@@ -100,8 +101,8 @@ train_model(model=model,
             results_file_path =save_path,
             condition_name=save_path+str(std_condition_name)+'_loss_acc.csv',
             quantise=parameters['quantise'],
-            std_path_to_save=save_path+str(std_condition_name)+'_model.pth',
-            quant_path_to_save=save_path+str(quant_condition_name)+'_model.pth')
+            std_path_to_save=models_path+str(std_condition_name)+'_model.pth',
+            quant_path_to_save=models_path+str(quant_condition_name)+'_model.pth')
 
 
 
