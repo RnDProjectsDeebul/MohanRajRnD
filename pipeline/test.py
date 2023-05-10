@@ -30,8 +30,8 @@ def run_test():
                     'batch_size': 128, 
                     #'model_name':'LeNet',
                     'model_name':'Resnet18',
-                    #'loss_function': 'Evidential',
-                    'loss_function': 'Crossentropy',
+                    'loss_function': 'Evidential',
+                    #'loss_function': 'Crossentropy',
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                     #'dataset': "MNIST",
                     'dataset': "CIFAR10",
@@ -146,10 +146,11 @@ def run_test():
     brier_score = get_brier_score(y_true=true_labels,y_pred_probs=probabilities)
     expected_calibration_error = get_expected_calibration_error(y_true=true_labels,y_pred=probabilities)
     calibration_curve_fig = plot_calibration_curve(y_prob=probabilities, y_true=true_labels, num_classes=parameters['num_classes'], save_path=save_path, file_name=calibration_plot_name)
+    
     if parameters['loss_function']=='Crossentropy':
         entropy_values = get_multinomial_entropy(probabilities)
     elif parameters['loss_function']== 'Evidential':
-        entropy_values = get_dirchlet_entropy(model_output)
+        entropy_values = get_multinomial_entropy(probabilities)
     print("Brier Score : ", round(brier_score,5))
     print('--'*20)
     print("Expected calibration error : ", round(expected_calibration_error,5))
@@ -188,16 +189,16 @@ def run_test():
         metrics_df.to_csv(path_or_buf= save_path+condition_name+'_metrics.csv')        
         
 
-
-
-    #save model logits as csv
-    #actual_labels = true_labels.reshape(-1, 1)
-    #logits_truelabel = np.concatenate((model_output, actual_labels), axis=1)
-    #logits_df = pd.DataFrame(logits_truelabel)
-    #logits_save_path = str(save_path)+str(condition_name)+'_logits.csv'
+    #save model logits and probabilities as csv
+    actual_labels = true_labels.reshape(-1, 1)
+    logits_truelabel = np.concatenate((model_output, actual_labels), axis=1)
+    logits_df = pd.DataFrame(logits_truelabel)
+    logits_save_path = str(save_path)+str(condition_name)+'_logits.csv'
     #logits_df.to_csv(path_or_buf=logits_save_path)
-
-
+    probo_df = pd.DataFrame(probabilities)
+    probo_save_path = str(save_path)+str(condition_name)+'_probabilities.csv'
+    #probo_df.to_csv(path_or_buf=probo_save_path)
+    
     
     if run !=None:
         entropy_plot_fig = plot_entropy_correct_incorrect(data_df=results_df, save_path=save_path, file_name=entropy_plot_name)

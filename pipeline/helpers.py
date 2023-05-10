@@ -70,13 +70,11 @@ def get_dirchlet_entropy(alpha_values):
         entropy_values.append(calculate_dirchlet_entropy(i))
     return entropy_values
 
-def predictive_entropy(predictions):
-    epsilon = sys.float_info.min
-    predictive_entropy = -np.sum( np.mean(predictions, axis=0) * np.log(np.mean(predictions, axis=0) + epsilon),
-            axis=-1)
-    return predictive_entropy
+# def get_multinomial_entropy( p_values ):
+#     return multinomial(1, p_values).entropy()
 
-
+# def get_dirchlet_entropy(alpha_values):    
+#     return dirichlet(alpha_values).entropy()
 
 
 def relu_evidence(y):
@@ -96,7 +94,7 @@ def get_model(model_name,num_classes,weights):
         model = LeNet()
     return model
 
-# Cross entropy and evidential test code.
+
 def test_one_epoch(dataloader,num_classes,model,device,loss_function):
     print("Started testing")    
 
