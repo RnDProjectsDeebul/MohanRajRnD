@@ -28,15 +28,17 @@ def run_test():
 
     parameters = {  'num_classes': 10,
                     'batch_size': 128, 
-                    #'model_name':'LeNet',
-                    'model_name':'Resnet18',
-                    'loss_function': 'Evidential',
+                    'model_name':'LeNet',
+                    #'model_name':'Resnet18',
+                    #'loss_function':'Evidential_MSE',
+                    #'loss_function':'Evidential_LOG',
+                    'loss_function':'Evidential_DIGAMMA',
                     #'loss_function': 'Crossentropy',
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                    #'dataset': "MNIST",
-                    'dataset': "CIFAR10",
+                    'dataset': "MNIST",
+                    #'dataset': "CIFAR10",
                     'quantise':True}
-    logger = False
+    logger = True
 
     if parameters['quantise'] == True:
         model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
@@ -147,10 +149,7 @@ def run_test():
     expected_calibration_error = get_expected_calibration_error(y_true=true_labels,y_pred=probabilities)
     calibration_curve_fig = plot_calibration_curve(y_prob=probabilities, y_true=true_labels, num_classes=parameters['num_classes'], save_path=save_path, file_name=calibration_plot_name)
     
-    if parameters['loss_function']=='Crossentropy':
-        entropy_values = get_multinomial_entropy(probabilities)
-    elif parameters['loss_function']== 'Evidential':
-        entropy_values = get_multinomial_entropy(probabilities)
+    entropy_values = get_multinomial_entropy(probabilities)
     print("Brier Score : ", round(brier_score,5))
     print('--'*20)
     print("Expected calibration error : ", round(expected_calibration_error,5))

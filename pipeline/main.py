@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore")
 
 from train import train_model
 from helpers import save_architecture_txt,get_model
-from losses import edl_mse_loss
+from losses import edl_mse_loss, edl_log_loss, edl_digamma_loss
 from data import import_data
 
 
@@ -21,15 +21,17 @@ models_path = '../../results/'
 parameters = { 'num_epochs':50,
                 'num_classes':10,
                 'batch_size': 128,
-                #'model_name':'LeNet',
-                'model_name':'Resnet18',#"MobileNetV2"
-                'loss_function':'Evidential',
+                'model_name':'LeNet',
+                #'model_name':'Resnet18',#"MobileNetV2"
+                #'loss_function':'Evidential_MSE',
+                #'loss_function':'Evidential_LOG',
+                'loss_function':'Evidential_DIGAMMA',
                 #'loss_function': 'Crossentropy',
                 'lr': 0.1,
                 'weight_decay':5e-4,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                #'dataset': "MNIST",
-                'dataset': "CIFAR10",
+                'dataset': "MNIST",
+                #'dataset': "CIFAR10",
                 'quantise': True}
 logger = True
 
@@ -52,8 +54,14 @@ dataloaders, class_names = import_data(parameters['dataset'], data_dir, paramete
 uncertainty = False
 if parameters['loss_function'] == 'Crossentropy':
     loss_function = nn.CrossEntropyLoss()
-elif parameters['loss_function'] == 'Evidential':
+elif parameters['loss_function'] == 'Evidential_MSE':
     loss_function = edl_mse_loss
+    uncertainty = True
+elif parameters['loss_function'] == 'Evidential_LOG':
+    loss_function = edl_log_loss
+    uncertainty = True
+elif parameters['loss_function'] == 'Evidential_DIGAMMA':
+    loss_function = edl_digamma_loss
     uncertainty = True
 else:
     raise NotImplementedError

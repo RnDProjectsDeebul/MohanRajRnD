@@ -128,7 +128,7 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 probs = torch.softmax(output,dim=1)
                 softmax_probabilities.extend(probs.cpu().numpy())
                  
-            elif loss_function == 'Evidential': 
+            elif loss_function[0:10] == 'Evidential': 
                 model.eval()
                 model.to(device=device)
                 
@@ -157,7 +157,7 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
         }
         return ce_results_dict
         
-    elif loss_function == 'Evidential':
+    elif loss_function[0:10] == 'Evidential':
         evi_results_dict = {
                         "true_labels":np.array(true_labels),
                         "pred_labels":np.array(predicted_labels),
