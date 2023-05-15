@@ -4,7 +4,7 @@ from torch.utils.data import random_split
 import torchvision.transforms as transforms
 import torchvision
 from torch import nn
-from helpers import get_model, test_one_epoch, get_brier_score, get_expected_calibration_error,get_best_worst_predictions,plot_predicted_images,plot_entropy_correct_incorrect
+from helpers import get_model, test_one_epoch, get_brier_score, get_expected_calibration_error,plot_entropy_correct_incorrect
 from helpers import get_accuracy_score,get_precision_score,get_recall_score,get_f1_score,get_classification_report,plot_confusion_matrix1
 import os
 import time
@@ -38,7 +38,7 @@ def run_test():
                     'dataset': "MNIST",
                     #'dataset': "CIFAR10",
                     'quantise':True}
-    logger = True
+    logger = False
 
     if parameters['quantise'] == True:
         model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
@@ -105,19 +105,20 @@ def run_test():
 
     print("Number of test images : ",len(test_loader)*parameters['batch_size'])
 
-    since = time.time()
+    #since = time.time()
     results = test_one_epoch(model=model,
                              dataloader=test_loader,
                              num_classes=len(class_names),
                              device=device,
                              loss_function=parameters['loss_function'])
-    time_elapsed = round(time.time() - since, 3)
+    #time_elapsed = round(time.time() - since, 3)
 
     # seperate the results
     true_labels = results['true_labels']
     pred_labels = results['pred_labels']
     probabilities = results['probabilities']
     model_output = results['model_output']
+    time_elapsed = results['time_elapsed']
 
 
     # classification metrics
@@ -158,7 +159,7 @@ def run_test():
 
 
     # Other metrics
-    print("Inference time for ", true_labels.shape[0] ," image is : ", time_elapsed, "seconds")  
+    print("Inference time for ", true_labels.shape[0] ," image is : ", time_elapsed, "milliseconds")  
 
     
     time_elapsed_runs.extend([time_elapsed])

@@ -14,6 +14,7 @@ import sys
 import matplotlib.image as mpimg
 from sklearn.calibration import calibration_curve
 from lenet import LeNet
+import time
 
 
 
@@ -118,7 +119,10 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 model.eval()
                 model.to(device=device)
                 
+                since = time.perf_counter()
                 output = model(inputs)
+                time_elapsed = time.perf_counter() - since
+                time_elapsed = '{:.3f}'.format(time_elapsed * 1000)
                 cross_entropy_output.extend(output.cpu().numpy())
                 
                 _,predictions = torch.max(output,1)
@@ -132,7 +136,10 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 model.eval()
                 model.to(device=device)
                 
+                since = time.perf_counter()
                 output = model(inputs)
+                time_elapsed = time.perf_counter() - since
+                time_elapsed = '{:.3f}'.format(time_elapsed * 1000)
                 evidence = relu_evidence(output)
                 alpha = evidence + 1
                 dirichlet_alpha_output.extend(alpha.cpu().numpy())
@@ -154,6 +161,7 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                         "pred_labels":np.array(predicted_labels),
                         "probabilities":np.array(softmax_probabilities),
                         "model_output":np.array(cross_entropy_output),
+                        "time_elapsed":time_elapsed,
         }
         return ce_results_dict
         
@@ -163,47 +171,11 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                         "pred_labels":np.array(predicted_labels),
                         "probabilities":np.array(evidential_probabilities),
                         "model_output":np.array(dirichlet_alpha_output),
+                        "time_elapsed":time_elapsed,
         }
         return evi_results_dict
 
     
-def get_best_worst_predictions(confidence_array):
-    confidences_idxs_sorted = np.argsort(confidence_array)
-    best_predictions = confidences_idxs_sorted[-9 : ]
-    worst_predictions = confidences_idxs_sorted[:9]
-
-    return best_predictions,worst_predictions
-
-def plot_predicted_images(predictions,confidences_pred_images,image_paths,labels,class_names,plot_preds,results_path,plot_name):
-
-    rows = 3
-    columns = 3
-    fig = plt.figure(figsize=(20,20))
-    
-    for idx,i in enumerate(plot_preds):
-        idx = idx+1
-        image = image_paths[i]
-        img_ = mpimg.imread(str(image))
-        # img_ = images[i].cpu().detach()
-        label_true = labels[i]
-        label_pred = predictions[i]
-        confidence = confidences_pred_images [i]
-
-        fig.add_subplot(rows, columns, idx)
-        # showing image
-        plt.imshow(img_)
-        plt.title("True_label : "+ str(class_names[label_true]))
-        plt.xlabel("Confidance : " + str(round(confidence,2)))
-        plt.ylabel("Pred_label : " + str(class_names[label_pred]))
-
-        plt.rc('axes', titlesize=20)
-        plt.rc('axes', labelsize=20)
-        plt.rc('xtick', labelsize=0)
-        plt.rc('ytick', labelsize=0)
-
-        # plt.savefig(results_path +'best_pred_evidential_dark_light.png' )
-        plt.savefig(str(results_path) + str(plot_name) +'.png' )
-    return fig
 
 
 def get_brier_score(y_true, y_pred_probs):

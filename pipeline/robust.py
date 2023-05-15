@@ -22,7 +22,7 @@ parameters = {  'num_classes': 10,
                 #'loss_function': 'Evidential',
                 'loss_function': 'Crossentropy',
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'quantise':False}
+                'quantise':True}
 model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_model.pth'
 
 model = get_model(parameters['model_name'],num_classes=parameters['num_classes'],weights=None)
