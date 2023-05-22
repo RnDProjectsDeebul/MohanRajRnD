@@ -1,0 +1,32 @@
+CIFAR10 CE
+Standard WO ADV:  0.28
+Quantise WO ADV:  0.29
+Standard W  ADV:  0.0
+Quantise W  ADV:  0.29
+
+
+CIFAR10 EDL_MSE
+Standard WO ADV:  0.13
+Quantise WO ADV:  0.12
+Standard W  ADV:  0.0
+Quantise W  ADV:  0.12
+
+
+CIFAR10 EDL_LOG
+Standard WO ADV:  0.29
+Quantise WO ADV:  0.27
+Standard W  ADV:  0.0
+Quantise W  ADV:  0.27
+
+
+CIFAR10 EDL_DIGAMMA
+Standard WO ADV:  0.21
+Quantise WO ADV:  0.22
+Standard W  ADV:  0.0
+Quantise W  ADV:  0.22
+
+
+
+
+
+
