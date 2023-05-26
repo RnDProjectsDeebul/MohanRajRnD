@@ -21,22 +21,24 @@ warnings.filterwarnings("ignore")
 
 
 def run_test():
-    global run_count, time_elapsed_runs, accuracy_runs
+    global run_count, time_elapsed_runs, accuracy_runs, auroc_runs
     data_dir = '../../data'
     save_path = '../results/'
     models_path = '../../results/'
 
     parameters = {  'num_classes': 10,
-                    'batch_size': 128, 
-                    'model_name':'LeNet',
+                    'batch_size': 1, 
+                    #'model_name':'LeNet',
                     #'model_name':'Resnet18',
+                    'model_name':'ResNet_DUQ',
                     #'loss_function':'Evidential_MSE',
                     #'loss_function':'Evidential_LOG',
-                    'loss_function':'Evidential_DIGAMMA',
+                    #'loss_function':'Evidential_DIGAMMA',
                     #'loss_function': 'Crossentropy',
+                    'loss_function': 'DUQ',
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                    'dataset': "MNIST",
-                    #'dataset': "CIFAR10",
+                    #'dataset': "MNIST",
+                    'dataset': "CIFAR10",
                     'quantise':True}
     logger = False
 
@@ -105,13 +107,11 @@ def run_test():
 
     print("Number of test images : ",len(test_loader)*parameters['batch_size'])
 
-    #since = time.time()
     results = test_one_epoch(model=model,
                              dataloader=test_loader,
                              num_classes=len(class_names),
                              device=device,
                              loss_function=parameters['loss_function'])
-    #time_elapsed = round(time.time() - since, 3)
 
     # seperate the results
     true_labels = results['true_labels']
@@ -119,6 +119,8 @@ def run_test():
     probabilities = results['probabilities']
     model_output = results['model_output']
     time_elapsed = results['time_elapsed']
+    auroc = results['auroc']
+    
 
 
     # classification metrics
@@ -164,6 +166,7 @@ def run_test():
     
     time_elapsed_runs.extend([time_elapsed])
     accuracy_runs.extend([accuracy_score])
+    auroc_runs.extend([auroc])
     if run_count==max_count:
         results_dict = {
             "entropy": entropy_values,
@@ -184,6 +187,7 @@ def run_test():
             "brierscore":brier_score,
             "expectedcalibrationerror":expected_calibration_error,
             "inferencetime":np.array(time_elapsed_runs),
+            "auroc":np.array(auroc),
             }
         metrics_df = pd.DataFrame(metrics_dict)
         metrics_df.to_csv(path_or_buf= save_path+condition_name+'_metrics.csv')        
@@ -221,6 +225,7 @@ def run_test():
 max_count=5
 run_count=0
 time_elapsed_runs = []
+auroc_runs = []
 accuracy_runs = []
 if __name__ == "__main__":
     for i in range(max_count):

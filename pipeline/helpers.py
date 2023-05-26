@@ -1,5 +1,7 @@
 import torch
 from torchvision.models import resnet18,mobilenet_v2,ResNet18_Weights
+from resnet_duq import ResNet_DUQ
+from lenet import LeNet
 from torch import nn
 import torch.nn.functional as F
 import os
@@ -7,13 +9,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import dirichlet, multinomial
-from sklearn.metrics import classification_report,accuracy_score,f1_score,precision_score,recall_score
+from sklearn.metrics import classification_report,accuracy_score,f1_score,precision_score,recall_score, roc_auc_score
 from scikitplot.metrics import plot_confusion_matrix
 import seaborn as sns
 import sys
 import matplotlib.image as mpimg
 from sklearn.calibration import calibration_curve
-from lenet import LeNet
 import time
 
 
@@ -93,6 +94,17 @@ def get_model(model_name,num_classes,weights):
         model.classifier[1] = nn.Linear(in_features=1280,out_features=num_classes)
     elif model_name == 'LeNet':
         model = LeNet()
+    elif model_name == 'ResNet_DUQ':
+        num_classes = 10
+        centroid_size = 512
+        model_output_size = 512
+        length_scale = 0.1
+        gamma = 0.999
+        feature_extractor = resnet18()
+        feature_extractor.conv1 = torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        feature_extractor.maxpool = torch.nn.Identity()
+        feature_extractor.fc = torch.nn.Identity()
+        model = ResNet_DUQ(feature_extractor, num_classes, centroid_size, model_output_size, length_scale, gamma,)
     return model
 
 
@@ -108,17 +120,22 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
     evidential_probabilities = []
     dirichlet_alpha_output = []
     
+    duq_accuracies = []
+    duq_kernel_dist = []
+    duq_probabilities = []
+    duq_output = []
+    
     uncertainty = []
 
+    count = 0
     # Begin testing
     with torch.no_grad():
         for batch_idx,(inputs,labels) in enumerate(dataloader):
             inputs,labels = inputs.to(device),labels.to(device)
-                
+            model.eval()
+            model.to(device=device)
+            
             if loss_function == 'Crossentropy': 
-                model.eval()
-                model.to(device=device)
-                
                 since = time.perf_counter()
                 output = model(inputs)
                 time_elapsed = time.perf_counter() - since
@@ -131,11 +148,9 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 
                 probs = torch.softmax(output,dim=1)
                 softmax_probabilities.extend(probs.cpu().numpy())
+                
                  
             elif loss_function[0:10] == 'Evidential': 
-                model.eval()
-                model.to(device=device)
-                
                 since = time.perf_counter()
                 output = model(inputs)
                 time_elapsed = time.perf_counter() - since
@@ -153,6 +168,33 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 
                 u = num_classes / torch.sum(alpha, dim=1, keepdim=True)
                 uncertainty.extend(u.cpu().numpy())
+                
+                
+            elif loss_function == 'DUQ': 
+                since = time.perf_counter()
+                output = model(inputs)
+                time_elapsed = time.perf_counter() - since
+                time_elapsed = '{:.3f}'.format(time_elapsed * 1000)
+                duq_output.extend(output.cpu().numpy())
+                
+                kernel_distance, predictions = output.max(1)
+                predicted_labels.extend(predictions.cpu().numpy())
+                true_labels.extend(labels.cpu().numpy())
+                
+                if count == 0:
+                    print(output)
+                    print("------")
+                    total = torch.sum(output)
+                    print(total)
+                    exit()
+                count += 1
+                
+                probs = torch.softmax(output,dim=1)
+                duq_probabilities.extend(probs.cpu().numpy())
+                
+                accuracy = predictions.eq(labels)
+                duq_accuracies.append(accuracy.cpu().numpy())
+                duq_kernel_dist.append(-kernel_distance.cpu().numpy())
 
 
     if loss_function == 'Crossentropy':    
@@ -162,6 +204,7 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                         "probabilities":np.array(softmax_probabilities),
                         "model_output":np.array(cross_entropy_output),
                         "time_elapsed":time_elapsed,
+                        "auroc":0,
         }
         return ce_results_dict
         
@@ -172,8 +215,24 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                         "probabilities":np.array(evidential_probabilities),
                         "model_output":np.array(dirichlet_alpha_output),
                         "time_elapsed":time_elapsed,
+                        "auroc":0,
         }
         return evi_results_dict
+    
+    elif loss_function == 'DUQ':
+        duq_accuracies = np.concatenate(duq_accuracies)
+        duq_kernel_dist = np.concatenate(duq_kernel_dist)
+        roc_auc = roc_auc_score(1 - duq_accuracies, duq_kernel_dist)
+        
+        duq_results_dict = {
+                        "true_labels":np.array(true_labels),
+                        "pred_labels":np.array(predicted_labels),
+                        "probabilities":np.array(duq_probabilities),
+                        "model_output":np.array(duq_output),
+                        "time_elapsed":time_elapsed,
+                        "auroc":roc_auc,
+        }
+        return duq_results_dict
 
     
 
