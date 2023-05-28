@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from helpers import get_device, one_hot_embedding
 from losses import relu_evidence
 from torch.autograd import Variable
@@ -9,10 +10,23 @@ import copy
 import warnings
 warnings.filterwarnings("ignore")
 
+def calc_gradients_input(x, y_pred):
+        gradients = torch.autograd.grad(outputs=y_pred, inputs=x, grad_outputs=torch.ones_like(y_pred), create_graph=True,)[0]
+        gradients = gradients.flatten(start_dim=1)
+        return gradients
+
+def calc_gradient_penalty(x, y_pred):
+        gradients = calc_gradients_input(x, y_pred)
+        grad_norm = gradients.norm(2, dim=1)
+        gradient_penalty = ((grad_norm - 1) ** 2).mean()
+        return gradient_penalty
+
+
 
 def train_model(model=None,
                 num_epochs=None,
                 uncertainty = None,
+                loss_name=None,
                 criterion=None,
                 optimizer=None,
                 scheduler=None,
@@ -35,126 +49,81 @@ def train_model(model=None,
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
-
-    # for epoch in range(num_epochs):
-    #     print('Epoch {}/{}'.format(epoch, num_epochs - 1))
-    #     print('-' * 10)
-
-    #     for phase in ['train', 'val']:
-
-    #         running_loss = 0
-    #         running_corrects = 0
-    #         total = 0
-
-    #         if phase == 'train':
-    #             model.train()
-    #             for data in dataloaders['train']:
-    #                 inputs, labels = data
-    #                 if torch.cuda.is_available():
-    #                     inputs = Variable(inputs.cuda())
-    #                     labels = Variable(labels.cuda())
-    #                 else:
-    #                     inputs, labels = Variable(inputs), Variable(labels)
-    #                 optimizer.zero_grad()
-    #                 outputs = model(inputs)
-    #                 if uncertainty:
-    #                     y = one_hot_embedding(labels=labels,num_classes=num_classes)
-    #                     y.to(device=device)
-    #                     loss = criterion(outputs, y.float(), epoch, num_classes, 3, device)
-    #                 else:
-    #                     loss = criterion(outputs, labels) 
-    #                 loss.backward()
-    #                 optimizer.step()
-    #                 _, preds = outputs.max(1)
-                
-    #         elif phase == 'val':
-    #             model.eval() 
-    #             with torch.no_grad():
-    #                 for data in dataloaders['val']:
-    #                     inputs, labels = data
-    #                     if torch.cuda.is_available():
-    #                         inputs = Variable(inputs.cuda())
-    #                         labels = Variable(labels.cuda())
-    #                     else:
-    #                         inputs, labels = Variable(inputs), Variable(labels)
-    #                     outputs = model(inputs)
-    #                     if uncertainty:
-    #                         y = one_hot_embedding(labels=labels,num_classes=num_classes)
-    #                         y.to(device=device)
-    #                         loss = criterion(outputs, y.float(), epoch, num_classes, 3, device)
-    #                     else:
-    #                         loss = criterion(outputs, labels) 
-    #                     _, preds = outputs.max(1)
-                
-    #         running_loss += loss.item()
-    #         running_corrects += preds.eq(labels).sum().item()
-    #         total += labels.size(0)
-    #         epoch_loss = running_loss / (epoch+1)
-    #         epoch_acc = 100.*running_corrects / total
+    
+    
     for epoch in range(num_epochs):
         print("Epoch {}/{}".format(epoch, num_epochs - 1))
         print("-" * 10)
 
-        # Each epoch has a training and validation phase
         for phase in ["train", "val"]:
             if phase == "train":
                 print("Training...")
-                model.train()  # Set model to training mode
+                model.train() 
             else:
                 print("Validating...")
-                model.eval()  # Set model to evaluate mode
+                model.eval()  
 
             running_loss = 0.0
             running_corrects = 0.0
             correct = 0
 
-            # Iterate over data.
             for i, (inputs, labels) in enumerate(dataloaders[phase]):
 
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
-                # zero the parameter gradients
                 optimizer.zero_grad()
 
-                # forward
-                # track history if only in train
+
                 with torch.set_grad_enabled(phase == "train"):
 
                     if uncertainty:
-                        y = one_hot_embedding(labels, num_classes)
-                        y = y.to(device)
-                        outputs = model(inputs)
-                        _, preds = torch.max(outputs, 1)
-                        loss = criterion(
-                            outputs, y.float(), epoch, num_classes, 10, device
-                        )
+                        if loss_name[0:10] == "Evidential":
+                            y = one_hot_embedding(labels, num_classes)
+                            y = y.to(device)
+                            outputs = model(inputs)
+                            _, preds = torch.max(outputs, 1)
+                            loss = criterion(outputs, y.float(), epoch, num_classes, 10, device)
 
-                        match = torch.reshape(torch.eq(preds, labels).float(), (-1, 1))
-                        acc = torch.mean(match)
-                        evidence = relu_evidence(outputs)
-                        alpha = evidence + 1
-                        u = num_classes / torch.sum(alpha, dim=1, keepdim=True)
-
-                        total_evidence = torch.sum(evidence, 1, keepdim=True)
-                        mean_evidence = torch.mean(total_evidence)
-                        mean_evidence_succ = torch.sum(
-                            torch.sum(evidence, 1, keepdim=True) * match
-                        ) / torch.sum(match + 1e-20)
-                        mean_evidence_fail = torch.sum(
-                            torch.sum(evidence, 1, keepdim=True) * (1 - match)
-                        ) / (torch.sum(torch.abs(1 - match)) + 1e-20)
-
+                            match = torch.reshape(torch.eq(preds, labels).float(), (-1, 1))
+                            acc = torch.mean(match)
+                            evidence = relu_evidence(outputs)
+                            alpha = evidence + 1
+                            u = num_classes / torch.sum(alpha, dim=1, keepdim=True)
+                            total_evidence = torch.sum(evidence, 1, keepdim=True)
+                            mean_evidence = torch.mean(total_evidence)
+                            mean_evidence_succ = torch.sum(torch.sum(evidence, 1, keepdim=True) * match
+                            ) / torch.sum(match + 1e-20)
+                            mean_evidence_fail = torch.sum(torch.sum(evidence, 1, keepdim=True) * (1 - match)
+                            ) / (torch.sum(torch.abs(1 - match)) + 1e-20)
+                            
+                        elif loss_name == "DUQ":         
+                            inputs.requires_grad_(True)
+                            y_pred = model(inputs)
+                            _, preds = torch.max(y_pred, 1)
+                            y = F.one_hot(labels, num_classes).float()
+                            loss = F.binary_cross_entropy(y_pred, y, reduction="mean")
+                            #gp = calc_gradient_penalty(inputs, y_pred)
+                            #loss += 0.5 * gp
+                            if phase == "train":
+                                loss.backward()
+                                optimizer.step()
+                                inputs.requires_grad_(False)
+                                with torch.no_grad():
+                                    model.eval()
+                                    model.update_embeddings(inputs, y)
+                                
                     else:
                         outputs = model(inputs)
                         _, preds = torch.max(outputs, 1)
                         loss = criterion(outputs, labels)
 
-                    if phase == "train":
+                        
+                    if phase == "train" and loss_name != "DUQ":
                         loss.backward()
                         optimizer.step()
 
-                # statistics
+
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels.data)
 
@@ -184,7 +153,6 @@ def train_model(model=None,
                 best_acc = epoch_acc
 
         loss_acc_dict['epoch_no'].append(epoch+1)
-        # scheduler.step()
         # print ("LR :", scheduler.get_lr())
                 
     loss_acc_df = pd.DataFrame(loss_acc_dict, columns=["epoch_no","train_loss","val_loss","train_acc","val_acc"])

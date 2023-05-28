@@ -18,22 +18,24 @@ from data import import_data
 data_dir = '../../data'
 save_path = '../results/'
 models_path = '../../results/'
-parameters = { 'num_epochs':50,
+parameters = { 'num_epochs':3,
                 'num_classes':10,
                 'batch_size': 128,
-                'model_name':'LeNet',
-                #'model_name':'Resnet18',#"MobileNetV2"
+                #'model_name':'LeNet',
+                #'model_name':'Resnet18',
+                'model_name':'ResNet_DUQ',
+                #'loss_function': 'Crossentropy',
                 #'loss_function':'Evidential_MSE',
                 #'loss_function':'Evidential_LOG',
-                'loss_function':'Evidential_DIGAMMA',
-                #'loss_function': 'Crossentropy',
+                #'loss_function':'Evidential_DIGAMMA',
+                'loss_function': 'DUQ',
                 'lr': 0.1,
                 'weight_decay':5e-4,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                'dataset': "MNIST",
-                #'dataset': "CIFAR10",
+                #'dataset': "MNIST",
+                'dataset': "CIFAR10",
                 'quantise': True}
-logger = True
+logger = False
 
 std_condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
 quant_condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
@@ -63,23 +65,22 @@ elif parameters['loss_function'] == 'Evidential_LOG':
 elif parameters['loss_function'] == 'Evidential_DIGAMMA':
     loss_function = edl_digamma_loss
     uncertainty = True
+elif parameters['loss_function'] == 'DUQ':
+    loss_function = None
+    uncertainty = True
 else:
     raise NotImplementedError
 
-
-#optimizer = torch.optim.SGD(model.parameters(),lr=parameters['lr'], momentum=0.9)
-#lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
-
-# optimizer = torch.optim.Adam(model.parameters(),lr=parameters['lr'], weight_decay=parameters['weight_decay'])
-# lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
     
-# optimizer = torch.optim.SGD(model.parameters(), lr=parameters['lr'], momentum=0.9, weight_decay=parameters['weight_decay'])
-# lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=0.005)
-lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+if parameters['loss_function'] == 'DUQ':
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.05, momentum=0.9, weight_decay=5e-4)
+    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[25, 50, 75], gamma=0.2)
+else:
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=0.005)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
- 
+
 if logger:
     run = neptune.init_run(
     #project="mohan20325145/CIFAR10",
@@ -100,6 +101,7 @@ else:
 train_model(model=model,
             num_epochs=parameters['num_epochs'],
             uncertainty = uncertainty,
+            loss_name = parameters['loss_function'],
             criterion=loss_function,
             optimizer=optimizer,
             scheduler=lr_scheduler,
