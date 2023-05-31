@@ -9,7 +9,7 @@ from scipy.io import loadmat
 from PIL import Image
 
 
-def get_MNIST(root="./"):
+def get_MNIST(root="../../"):
     input_size = 28
     num_classes = 10
     transform = transforms.Compose(
@@ -26,7 +26,7 @@ def get_MNIST(root="./"):
     return input_size, num_classes, train_dataset, test_dataset
 
 
-def get_FashionMNIST(root="./"):
+def get_FashionMNIST(root="../../"):
     input_size = 28
     num_classes = 10
 
@@ -42,7 +42,7 @@ def get_FashionMNIST(root="./"):
     return input_size, num_classes, train_dataset, test_dataset
 
 
-def get_SVHN(root="./"):
+def get_SVHN(root="../../"):
     input_size = 32
     num_classes = 10
     transform = transforms.Compose(
@@ -57,7 +57,7 @@ def get_SVHN(root="./"):
     return input_size, num_classes, train_dataset, test_dataset
 
 
-def get_CIFAR10(root="./"):
+def get_CIFAR10(root="../../"):
     input_size = 32
     num_classes = 10
     train_transform = transforms.Compose(
@@ -69,7 +69,7 @@ def get_CIFAR10(root="./"):
         ]
     )
     train_dataset = datasets.CIFAR10(
-        root + "data/CIFAR10", train=True, transform=train_transform, download=True
+        root + "data", train=True, transform=train_transform, download=True
     )
 
     test_transform = transforms.Compose(
@@ -79,13 +79,13 @@ def get_CIFAR10(root="./"):
         ]
     )
     test_dataset = datasets.CIFAR10(
-        root + "data/CIFAR10", train=False, transform=test_transform, download=True
+        root + "data", train=False, transform=test_transform, download=True
     )
 
     return input_size, num_classes, train_dataset, test_dataset
 
 
-def get_notMNIST(root="./"):
+def get_notMNIST(root="../../"):
     input_size = 28
     num_classes = 10
 

@@ -1,6 +1,6 @@
 import torch
 from torchvision.models import resnet18,mobilenet_v2,ResNet18_Weights
-from resnet_duq import ResNet_DUQ
+from utils.resnet_duq import ResNet_DUQ
 from lenet import LeNet
 from torch import nn
 import torch.nn.functional as F

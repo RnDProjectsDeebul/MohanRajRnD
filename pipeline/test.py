@@ -27,7 +27,7 @@ def run_test():
     models_path = '../../results/'
 
     parameters = {  'num_classes': 10,
-                    'batch_size': 1, 
+                    'batch_size': 128, 
                     #'model_name':'LeNet',
                     #'model_name':'Resnet18',
                     'model_name':'ResNet_DUQ',
