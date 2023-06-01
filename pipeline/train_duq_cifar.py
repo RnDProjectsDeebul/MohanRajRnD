@@ -22,6 +22,7 @@ from utils.evaluate_ood import get_cifar_svhn_ood, get_auroc_classification
 
 from data import import_data
 import copy
+import pandas as pd
 import torchvision
 from torch.quantization import quantize_fx
 import torchvision.transforms as transforms
@@ -29,78 +30,34 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def main(
-    architecture,
-    batch_size,
-    length_scale,
-    centroid_size,
-    learning_rate,
-    l_gradient_penalty,
-    gamma,
-    weight_decay,
-    final_model,
-    output_dir,
-):
+def main(architecture,batch_size,length_scale,centroid_size,learning_rate,l_gradient_penalty,gamma,weight_decay,final_model,
+    output_dir,):
+    
     writer = SummaryWriter(log_dir=f"../../results/duq_writer")
+    loss_acc_dict = {"epoch_no": [],"train_loss": [],"val_loss": [],"train_acc": [],"val_acc": []}
 
     ds = all_datasets["CIFAR10"]()
     input_size, num_classes, dataset, test_dataset = ds
+    train_dataset = dataset
+    val_dataset = test_dataset
 
-    # Split up training set
-    idx = list(range(len(dataset)))
-    random.shuffle(idx)
 
-    if final_model:
-        train_dataset = dataset
-        val_dataset = test_dataset
-    else:
-        val_size = int(len(dataset) * 0.8)
-        train_dataset = torch.utils.data.Subset(dataset, idx[:val_size])
-        val_dataset = torch.utils.data.Subset(dataset, idx[val_size:])
-
-        val_dataset.transform = (
-            test_dataset.transform
-        )  # Test time preprocessing for validation
-
-    if architecture == "WRN":
-        model_output_size = 640
-        epochs = 200
-        milestones = [60, 120, 160]
-        feature_extractor = WideResNet()
-    elif architecture == "ResNet18":
-        model_output_size = 512
-        epochs = 3
-        milestones = [25, 50, 75]
-        feature_extractor = resnet18()
-
-        # Adapted resnet from:
-        # https://github.com/kuangliu/pytorch-cifar/blob/master/models/resnet.py
-        feature_extractor.conv1 = torch.nn.Conv2d(
-            3, 64, kernel_size=3, stride=1, padding=1, bias=False
-        )
-        feature_extractor.maxpool = torch.nn.Identity()
-        feature_extractor.fc = torch.nn.Identity()
+    model_output_size = 512
+    epochs = 3
+    milestones = [25, 50, 75]
+    feature_extractor = resnet18()
+    feature_extractor.conv1 = torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+    feature_extractor.maxpool = torch.nn.Identity()
+    feature_extractor.fc = torch.nn.Identity()
 
     if centroid_size is None:
         centroid_size = model_output_size
 
-    model = ResNet_DUQ(
-        feature_extractor,
-        num_classes,
-        centroid_size,
-        model_output_size,
-        length_scale,
-        gamma,
-    )
+    model = ResNet_DUQ(feature_extractor,num_classes,centroid_size,model_output_size,length_scale,gamma,)
     model = model.cuda()
 
-    optimizer = torch.optim.SGD(
-        model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=weight_decay
-    )
-
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        optimizer, milestones=milestones, gamma=0.2
-    )
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=weight_decay)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones, gamma=0.2)
 
     def calc_gradients_input(x, y_pred):
         gradients = torch.autograd.grad(
@@ -116,29 +73,20 @@ def main(
 
     def calc_gradient_penalty(x, y_pred):
         gradients = calc_gradients_input(x, y_pred)
-
-        # L2 norm
         grad_norm = gradients.norm(2, dim=1)
-
-        # Two sided penalty
         gradient_penalty = ((grad_norm - 1) ** 2).mean()
-
         return gradient_penalty
 
+    
     def step(engine, batch):
         model.train()
-
         optimizer.zero_grad()
-
         x, y = batch
         x, y = x.cuda(), y.cuda()
-
+        lab = copy.deepcopy(y)
         x.requires_grad_(True)
-
         y_pred = model(x)
-
         y = F.one_hot(y, num_classes).float()
-
         loss = F.binary_cross_entropy(y_pred, y, reduction="mean")
 
         if l_gradient_penalty > 0:
@@ -147,33 +95,34 @@ def main(
 
         loss.backward()
         optimizer.step()
-
         x.requires_grad_(False)
 
         with torch.no_grad():
             model.eval()
             model.update_embeddings(x, y)
+        #return loss.item()
+        return {"loss": loss.item(), "y_": lab, "y_pred_": y_pred}
+        
 
-        return loss.item()
-
+    
     def eval_step(engine, batch):
         model.eval()
-
         x, y = batch
         x, y = x.cuda(), y.cuda()
-
         x.requires_grad_(True)
-
         y_pred = model(x)
-
         return {"x": x, "y": y, "y_pred": y_pred}
 
+    
     trainer = Engine(step)
     evaluator = Engine(eval_step)
 
-    metric = Average()
+    metric = Average(output_transform=lambda out: (out["loss"]))
     metric.attach(trainer, "loss")
 
+    metric = Accuracy(output_transform=lambda out: (out["y_pred_"], out["y_"]))
+    metric.attach(trainer, "train_accuracy")
+    
     metric = Accuracy(output_transform=lambda out: (out["y_pred"], out["y"]))
     metric.attach(evaluator, "accuracy")
 
@@ -183,9 +132,7 @@ def main(
     metric = Loss(F.binary_cross_entropy, output_transform=bce_output_transform)
     metric.attach(evaluator, "bce")
 
-    metric = Loss(
-        calc_gradient_penalty, output_transform=lambda out: (out["x"], out["y_pred"])
-    )
+    metric = Loss(calc_gradient_penalty, output_transform=lambda out: (out["x"], out["y_pred"]))
     metric.attach(evaluator, "gradient_penalty")
 
     pbar = ProgressBar(dynamic_ncols=True)
@@ -193,27 +140,26 @@ def main(
 
     kwargs = {"num_workers": 4, "pin_memory": True}
 
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, **kwargs
-    )
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, **kwargs)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=False, **kwargs)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, **kwargs)
 
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=False, **kwargs
-    )
-
-    test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False, **kwargs
-    )
-
+    
+    
     @trainer.on(Events.EPOCH_COMPLETED)
     def log_results(trainer):
+        
+        ## Training metrics
         metrics = trainer.state.metrics
         loss = metrics["loss"]
-
         print(f"Train - Epoch: {trainer.state.epoch} Loss: {loss:.2f}")
-
         writer.add_scalar("Loss/train", loss, trainer.state.epoch)
+        
+        loss_acc_dict['epoch_no'].append(trainer.state.epoch)
+        loss_acc_dict['train_loss'].append(metrics["loss"])
+        loss_acc_dict['train_acc'].append(metrics["train_accuracy"])
 
+        
         if trainer.state.epoch > (epochs - 5):
             accuracy, auroc = get_cifar_svhn_ood(model)
             print(f"Test Accuracy: {accuracy}, AUROC: {auroc}")
@@ -225,6 +171,8 @@ def main(
             writer.add_scalar("OoD/val_accuracy", accuracy, trainer.state.epoch)
             writer.add_scalar("OoD/roc_auc_classification", auroc, trainer.state.epoch)
 
+            
+        ## Validation metrics
         evaluator.run(val_loader)
         metrics = evaluator.state.metrics
         acc = metrics["accuracy"]
@@ -232,23 +180,25 @@ def main(
         GP = metrics["gradient_penalty"]
         loss = bce + l_gradient_penalty * GP
 
-        print(
-            (
+        print((
                 f"Valid - Epoch: {trainer.state.epoch} "
                 f"Acc: {acc:.4f} "
                 f"Loss: {loss:.2f} "
                 f"BCE: {bce:.2f} "
                 f"GP: {GP:.2f} "
-            )
-        )
+            ))
 
         writer.add_scalar("Loss/valid", loss, trainer.state.epoch)
         writer.add_scalar("BCE/valid", bce, trainer.state.epoch)
         writer.add_scalar("GP/valid", GP, trainer.state.epoch)
         writer.add_scalar("Accuracy/valid", acc, trainer.state.epoch)
-
+        
+        loss_acc_dict['val_loss'].append(loss)
+        loss_acc_dict['val_acc'].append(acc)
+        
         scheduler.step()
 
+        
     trainer.run(train_loader, max_epochs=epochs)
     evaluator.run(test_loader)
     acc = evaluator.state.metrics["accuracy"]
@@ -257,8 +207,16 @@ def main(
 
     torch.save(model.state_dict(), f"../../results/DUQ_ResNet_DUQ_model.pth")
     writer.close()
+    
+    condition_name = '../results/'+'DUQ'+'_'+'ResNet_DUQ'+'_loss_acc.csv'
+    loss_acc_df = pd.DataFrame(loss_acc_dict, columns=["epoch_no","train_loss","val_loss","train_acc","val_acc"])    
+    loss_acc_df.to_csv(path_or_buf=condition_name)
 
 
+    
+    
+    
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -319,8 +277,6 @@ if __name__ == "__main__":
         "--output_dir", type=str, default="results", help="set output folder"
     )
 
-    # Below setting cannot be used for model selection,
-    # because the validation set equals the test set.
     parser.add_argument(
         "--final_model",
         action="store_true",
