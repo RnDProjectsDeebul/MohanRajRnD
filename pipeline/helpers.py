@@ -1,6 +1,7 @@
 import torch
 from torchvision.models import resnet18,mobilenet_v2,ResNet18_Weights
 from utils.resnet_duq import ResNet_DUQ
+from utils.cnn_duq import CNN_DUQ
 from lenet import LeNet
 from torch import nn
 import torch.nn.functional as F
@@ -105,6 +106,13 @@ def get_model(model_name,num_classes,weights):
         feature_extractor.maxpool = torch.nn.Identity()
         feature_extractor.fc = torch.nn.Identity()
         model = ResNet_DUQ(feature_extractor, num_classes, centroid_size, model_output_size, length_scale, gamma,)
+    elif model_name == 'LeNet_DUQ':
+        num_classes = 10
+        embedding_size = 256
+        learnable_length_scale = False 
+        length_scale = 0.05
+        gamma = 0.999
+        model = CNN_DUQ(num_classes,embedding_size,learnable_length_scale,length_scale,gamma,)
     return model
 
 
