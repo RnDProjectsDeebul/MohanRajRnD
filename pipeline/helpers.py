@@ -181,13 +181,13 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 predicted_labels.extend(predictions.cpu().numpy())
                 true_labels.extend(labels.cpu().numpy())
                 
-                if count == 0:
-                    print(output)
-                    print("------")
-                    total = torch.sum(output)
-                    print(total)
-                    exit()
-                count += 1
+#                 if count == 0:
+#                     print(output)
+#                     print("------")
+#                     total = torch.sum(output)
+#                     print(total)
+#                     exit()
+#                 count += 1
                 
                 probs = torch.softmax(output,dim=1)
                 duq_probabilities.extend(probs.cpu().numpy())

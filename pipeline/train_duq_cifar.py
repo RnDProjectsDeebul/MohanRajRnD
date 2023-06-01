@@ -43,7 +43,7 @@ def main(architecture,batch_size,length_scale,centroid_size,learning_rate,l_grad
 
 
     model_output_size = 512
-    epochs = 3
+    epochs = 50
     milestones = [25, 50, 75]
     feature_extractor = resnet18()
     feature_extractor.conv1 = torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)

@@ -21,7 +21,8 @@ warnings.filterwarnings("ignore")
 
 
 def run_test():
-    global run_count, time_elapsed_runs, accuracy_runs, auroc_runs
+    global accuracy_runs, precision_runs, recall_runs, f1_score_runs, ece_runs, brier_score_runs, time_elapsed_runs, auroc_runs
+
     data_dir = '../../data'
     save_path = '../results/'
     models_path = '../../results/'
@@ -39,7 +40,7 @@ def run_test():
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                     #'dataset': "MNIST",
                     'dataset': "CIFAR10",
-                    'quantise':True}
+                    'quantise':False}
     logger = False
 
     if parameters['quantise'] == True:
@@ -163,10 +164,15 @@ def run_test():
     # Other metrics
     print("Inference time for ", true_labels.shape[0] ," image is : ", time_elapsed, "milliseconds")  
 
-    
-    time_elapsed_runs.extend([time_elapsed])
     accuracy_runs.extend([accuracy_score])
+    precision_runs.extend([precision_score])
+    recall_runs.extend([recall_score])
+    f1_score_runs.extend([f1_score])
+    ece_runs.extend([expected_calibration_error])
+    brier_score_runs.extend([brier_score])
+    time_elapsed_runs.extend([time_elapsed])
     auroc_runs.extend([auroc])
+    
     if run_count==max_count:
         results_dict = {
             "entropy": entropy_values,
@@ -181,11 +187,11 @@ def run_test():
         
         metrics_dict = {
             "accuracy":np.array(accuracy_runs),
-            "precision":precision_score,
-            "recall_score":recall_score,
-            "f1score":f1_score,
-            "brierscore":brier_score,
-            "expectedcalibrationerror":expected_calibration_error,
+            "precision":np.array(precision_runs),
+            "recall_score":np.array(recall_runs),
+            "f1score":np.array(f1_score_runs),
+            "brierscore":np.array(brier_score_runs),
+            "expectedcalibrationerror":np.array(ece_runs),
             "inferencetime":np.array(time_elapsed_runs),
             "auroc":np.array(auroc),
             }
@@ -222,11 +228,20 @@ def run_test():
     
     
     
-max_count=5
-run_count=0
+
+
+accuracy_runs = []
+precision_runs = []
+recall_runs = []
+f1_score_runs = []
+ece_runs = []
+brier_score_runs = []
 time_elapsed_runs = []
 auroc_runs = []
-accuracy_runs = []
+
+
+max_count=5
+run_count=0
 if __name__ == "__main__":
     for i in range(max_count):
         run_count += 1
