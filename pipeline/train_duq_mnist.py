@@ -10,7 +10,7 @@ from ignite.engine import Events, Engine
 from ignite.metrics import Accuracy, Average, Loss
 from ignite.contrib.handlers import ProgressBar
 
-from utils.cnn_duq import CNN_DUQ
+from utils.lenet_duq import CNN_DUQ
 from utils.datasets import all_datasets
 
 from data import import_data
@@ -33,7 +33,7 @@ weight_decay = 1e-4
 num_classes = 10
 milestones = [25, 50, 75]
 embedding_size = 256
-learnable_length_scale = False 
+learnable_length_scale = False  
 
 
 

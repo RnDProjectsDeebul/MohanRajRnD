@@ -43,7 +43,7 @@ def run_test():
                     'dataset': "MNIST",
                     #'dataset': "CIFAR10",
                     'quantise': True}
-    logger = False
+    logger = True
 
     if parameters['quantise'] == True:
         model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
