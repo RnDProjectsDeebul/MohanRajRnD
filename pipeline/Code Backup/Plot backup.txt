@@ -1,0 +1,19 @@
+a1  = "\\begin{table}[h!] \centering \setstretch{1.3} \\begin{tabular}{|c|l|c|c|}"
+a2  = "\hline \\textbf{Dataset} & \\textbf{Method} & \\textbf{FP32 (Standard Model)} & \\textbf{INT8 (Quantised Model)} \\\ \hline \multirow{5}{*}{CIAFR10}"
+a3  = " & Cross Entropy & &  \\\ \cline{2-4}"
+a4  = " & Evidential Log Likelhood &  &  \\\ \cline{2-4} "
+a5  = " & Evidential Digamma &  &  \\\ \cline{2-4} "
+a6  = " & DUQ &  &  \\\ \cline{2-4} "
+a7  = " & DUM &  &  \\\ \hline "
+
+a8  = " \multirow{5}{*}{MNIST}"
+a9  = " & Cross Entropy &  &  \\\ \cline{2-4} "
+a10 = " & Evidential Log Likelihood &  &  \\\ \cline{2-4} "
+a11 = " & Evidential Digamma &  &  \\\ \cline{2-4} "
+a12 = " & DUQ &  &  \\\ \cline{2-4} "
+a13 = " & DUM &  &  \\\ \hline "
+
+a14 = " \end{tabular} \end{table}"
+
+a = a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14
+print(a)

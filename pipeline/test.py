@@ -31,8 +31,8 @@ def run_test():
                     'batch_size': 128, 
                     #'model_name':'LeNet',
                     #'model_name':'Resnet18',
-                    'model_name':'LeNet_DUQ',
-                    #'model_name':'ResNet_DUQ',
+                    #'model_name':'LeNet_DUQ',
+                    'model_name':'ResNet_DUQ',
                   
                     #'loss_function': 'Crossentropy',
                     #'loss_function':'Evidential_MSE',
@@ -40,8 +40,8 @@ def run_test():
                     #'loss_function':'Evidential_DIGAMMA',
                     'loss_function': 'DUQ',
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                    'dataset': "MNIST",
-                    #'dataset': "CIFAR10",
+                    #'dataset': "MNIST",
+                    'dataset': "CIFAR10",
                     'quantise': True}
     logger = True
 
