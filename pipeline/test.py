@@ -1,6 +1,6 @@
 import torch
 from torchvision.models import resnet18,mobilenet_v2
-from torch.utils.data import random_split
+from torch.utils.data import random_split, DataLoader
 import torchvision.transforms as transforms
 import torchvision
 from torch import nn
@@ -43,7 +43,7 @@ def run_test():
                     #'dataset': "MNIST",
                     'dataset': "CIFAR10",
                     'quantise': True}
-    logger = True
+    logger = False
 
     if parameters['quantise'] == True:
         model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
@@ -108,10 +108,15 @@ def run_test():
     print("Loading trained weights and eval mode is successful")
     model.to(device=device)
 
-    print("Number of test images : ",len(test_loader)*parameters['batch_size'])
-
+    print("Number of test images : ",len(test_loader.dataset))
+    
+    num_test_samples = len(test_loader.dataset)
+    split_lengths = [num_test_samples // 5] * 5
+    sliced_testdatasets = random_split(test_loader.dataset, split_lengths)
+    sliced_testloaders = [DataLoader(data, batch_size=128, shuffle=False, num_workers=2) for data in sliced_testdatasets]
+    
     results = test_one_epoch(model=model,
-                             dataloader=test_loader,
+                             dataloader=sliced_testloaders[run_count-1],
                              num_classes=len(class_names),
                              device=device,
                              loss_function=parameters['loss_function'])
