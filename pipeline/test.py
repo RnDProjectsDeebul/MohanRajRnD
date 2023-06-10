@@ -31,8 +31,8 @@ def run_test():
                     'batch_size': 128, 
                     #'model_name':'LeNet',
                     #'model_name':'Resnet18',
-                    #'model_name':'LeNet_DUQ',
-                    'model_name':'ResNet_DUQ',
+                    'model_name':'LeNet_DUQ',
+                    #'model_name':'ResNet_DUQ',
                   
                     #'loss_function': 'Crossentropy',
                     #'loss_function':'Evidential_MSE',
@@ -40,9 +40,9 @@ def run_test():
                     #'loss_function':'Evidential_DIGAMMA',
                     'loss_function': 'DUQ',
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                    #'dataset': "MNIST",
-                    'dataset': "CIFAR10",
-                    'quantise': True}
+                    'dataset': "MNIST",
+                    #'dataset': "CIFAR10",
+                    'quantise': False}
     logger = False
 
     if parameters['quantise'] == True:
@@ -113,7 +113,7 @@ def run_test():
     num_test_samples = len(test_loader.dataset)
     split_lengths = [num_test_samples // 5] * 5
     sliced_testdatasets = random_split(test_loader.dataset, split_lengths)
-    sliced_testloaders = [DataLoader(data, batch_size=128, shuffle=False, num_workers=2) for data in sliced_testdatasets]
+    sliced_testloaders = [DataLoader(data, batch_size=parameters['batch_size'], shuffle=False, num_workers=2) for data in sliced_testdatasets]
     
     results = test_one_epoch(model=model,
                              dataloader=sliced_testloaders[run_count-1],

@@ -135,7 +135,6 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
     
     uncertainty = []
 
-    count = 0
     # Begin testing
     with torch.no_grad():
         for batch_idx,(inputs,labels) in enumerate(dataloader):
@@ -188,18 +187,14 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 kernel_distance, predictions = output.max(1)
                 predicted_labels.extend(predictions.cpu().numpy())
                 true_labels.extend(labels.cpu().numpy())
-                
-#                 if count == 0:
-#                     print(output)
-#                     print("------")
-#                     total = torch.sum(output)
-#                     print(total)
-#                     exit()
-#                 count += 1
-                
-                probs = torch.softmax(output,dim=1)
-                duq_probabilities.extend(probs.cpu().numpy())
-                
+                                    
+                rest = (1 - kernel_distance)/9
+                probs = torch.zeros((predictions.shape[0], 10), device=device)
+                for i in range(predictions.shape[0]):
+                    probs[i].fill_(rest[i])
+                probs.scatter_(1, predictions.unsqueeze(1), kernel_distance.unsqueeze(1))    
+                duq_probabilities.extend(probs.cpu().numpy())         
+                                
                 accuracy = predictions.eq(labels)
                 duq_accuracies.append(accuracy.cpu().numpy())
                 duq_kernel_dist.append(-kernel_distance.cpu().numpy())
