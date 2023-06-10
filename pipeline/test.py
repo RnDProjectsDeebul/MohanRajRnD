@@ -29,22 +29,29 @@ def run_test():
 
     parameters = {  'num_classes': 10,
                     'batch_size': 128, 
+                    'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
+                  
+                  
                     #'model_name':'LeNet',
                     #'model_name':'Resnet18',
-                    'model_name':'LeNet_DUQ',
-                    #'model_name':'ResNet_DUQ',
-                  
                     #'loss_function': 'Crossentropy',
-                    #'loss_function':'Evidential_MSE',
                     #'loss_function':'Evidential_LOG',
                     #'loss_function':'Evidential_DIGAMMA',
+                  
+                  
+                    #'model_name':'LeNet_DUQ',
+                    'model_name':'ResNet_DUQ',
                     'loss_function': 'DUQ',
-                    'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                    'dataset': "MNIST",
-                    #'dataset': "CIFAR10",
-                    'quantise': False}
-    logger = False
+                  
+                    #'dataset': "MNIST",
+                    'dataset': "CIFAR10",
+                  
+                    'quantise': True}
+    
+    logger = True
 
+    
+    
     if parameters['quantise'] == True:
         model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
         condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
