@@ -37,16 +37,16 @@ def train_single_epoch(
         optimizer.step()
         num_samples += len(data)
 
-        if batch_idx % log_interval == 0:
-            print(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader) * len(data),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
-            )
+#         if batch_idx % log_interval == 0:
+#             print(
+#                 "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
+#                     epoch,
+#                     batch_idx * len(data),
+#                     len(train_loader) * len(data),
+#                     100.0 * batch_idx / len(train_loader),
+#                     loss.item(),
+#                 )
+#             )
 
     print("====> Epoch: {} Average loss: {:.4f}".format(epoch, train_loss / num_samples))
     return train_loss / num_samples

@@ -142,9 +142,13 @@ if __name__ == "__main__":
 
     dataiter = iter(dataloader['train'])
     img, lab = next(dataiter)
-    m = copy.deepcopy(model)
+    m = copy.deepcopy(net)
+    m = net
     m.to("cpu")
     m.eval()
+#     with open('spectral.txt', "w") as f:
+#         f.write(str(m))
+#         f.close()
     qconfig_dict = {"": torch.quantization.get_default_qconfig("fbgemm")}
     model_prepared = quantize_fx.prepare_fx(m, qconfig_dict, img)
     with torch.inference_mode():

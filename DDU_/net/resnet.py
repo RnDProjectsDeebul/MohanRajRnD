@@ -119,6 +119,7 @@ class ResNet(nn.Module):
             padding = 1 if kernel_size == 3 else 0
 
             conv = nn.Conv2d(in_c, out_c, kernel_size, stride, padding, bias=False)
+            #print(type(conv))
 
             if not spectral_normalization:
                 return conv
@@ -131,7 +132,9 @@ class ResNet(nn.Module):
                 # Otherwise use spectral norm conv, with loose bound
                 shapes = (in_c, input_size, input_size)
                 wrapped_conv = spectral_norm_conv(conv, coeff, shapes, n_power_iterations)
-
+            #print(type(wrapped_conv))
+            #print("____spectral conv above___")
+            
             return wrapped_conv
 
         self.wrapped_conv = wrapped_conv

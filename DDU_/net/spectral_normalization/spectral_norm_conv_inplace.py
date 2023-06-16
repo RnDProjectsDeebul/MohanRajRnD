@@ -104,7 +104,9 @@ class SpectralNormConv(object):
 
         # rescaling
         weight = weight / (factorReverse + 1e-5)  # for stability
-
+        
+        #weight = torch.nn.Parameter(weight)
+        
         # for logging
         sigma_log.copy_(sigma.detach())
 
