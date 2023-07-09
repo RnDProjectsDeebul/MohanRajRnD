@@ -22,7 +22,7 @@ def training_args():
     save_interval = 25
     save_loc = "./"
     saved_model_name = "resnet50_350.model"
-    epoch = 3
+    epoch = 2
     first_milestone = 150  # Milestone for change in lr
     second_milestone = 250  # Milestone for change in lr
     default_seed = 1
@@ -60,7 +60,7 @@ def training_args():
     parser.add_argument(
         "-sn", action="store_true", dest="sn", help="whether to use spectral normalisation during training",
     )
-    parser.set_defaults(sn=False)
+    parser.set_defaults(sn=True)
     parser.add_argument(
         "--coeff", type=float, default=sn_coeff, dest="coeff", help="Coeff parameter for spectral normalisation",
     )

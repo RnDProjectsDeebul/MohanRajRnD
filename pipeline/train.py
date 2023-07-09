@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from helpers import get_device, one_hot_embedding
 from losses import relu_evidence
 from torch.autograd import Variable
-from torchmetrics import Accuracy
+#from torchmetrics import Accuracy
 from torch.quantization import quantize_fx
 import pandas as pd
 import copy

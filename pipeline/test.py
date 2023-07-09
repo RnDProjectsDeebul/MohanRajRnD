@@ -9,6 +9,7 @@ from helpers import get_accuracy_score,get_precision_score,get_recall_score,get_
 import os
 import time
 import copy
+import random
 import numpy as np
 import pandas as pd
 import neptune
@@ -31,22 +32,23 @@ def run_test():
                     'batch_size': 128, 
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                   
+                    'dataset': "MNIST",
+                    #'dataset': "CIFAR10", 
                   
-                    #'model_name':'LeNet',
+                  
+                    'model_name':'LeNet',
                     #'model_name':'Resnet18',
-                    #'loss_function': 'Crossentropy',
+                  
+                    'loss_function': 'Crossentropy',
                     #'loss_function':'Evidential_LOG',
                     #'loss_function':'Evidential_DIGAMMA',
                   
                   
                     #'model_name':'LeNet_DUQ',
-                    'model_name':'ResNet_DUQ',
-                    'loss_function': 'DUQ',
+                    #'model_name':'ResNet_DUQ',
+                    #'loss_function': 'DUQ',
                   
-                    #'dataset': "MNIST",
-                    'dataset': "CIFAR10",
-                  
-                    'quantise': True}
+                    'quantise': False}
     
     logger = True
 
@@ -74,8 +76,7 @@ def run_test():
 
     if logger and run_count==max_count:
         run = neptune.init_run(
-        #project="mohan20325145/CIFAR10",
-        project="mohan20325145/MNIST",
+        project="mohan20325145/FirstDraft",
         api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJhZWQyMTU4OC02NmU4LTRiNjgtYWE5Zi1lNDg5MjdmZGJhNzYifQ==",
         tags = tags,
         name= name,
@@ -115,18 +116,36 @@ def run_test():
     print("Loading trained weights and eval mode is successful")
     model.to(device=device)
 
-    print("Number of test images : ",len(test_loader.dataset))
+    #print("Number of test images : ",len(test_loader.dataset))
     
-    num_test_samples = len(test_loader.dataset)
-    split_lengths = [num_test_samples // 5] * 5
-    sliced_testdatasets = random_split(test_loader.dataset, split_lengths)
-    sliced_testloaders = [DataLoader(data, batch_size=parameters['batch_size'], shuffle=False, num_workers=2) for data in sliced_testdatasets]
-    
+    if run_count!=max_count:
+        sample_to_test = 5000
+    else:
+        sample_to_test = 10000
+        
+    random_indices = random.sample(range(len(test_loader.dataset)), sample_to_test)
+    random_samp_dataset = torch.utils.data.Subset(test_loader.dataset, random_indices)
+    random_samp_dataloader = DataLoader(random_samp_dataset, batch_size=parameters['batch_size'], shuffle=False, num_workers=2)
+    print("Number of test images : ",len(random_samp_dataloader.dataset))
     results = test_one_epoch(model=model,
-                             dataloader=sliced_testloaders[run_count-1],
+                             dataloader=random_samp_dataloader,
                              num_classes=len(class_names),
                              device=device,
                              loss_function=parameters['loss_function'])
+
+        
+    
+    
+#     num_test_samples = len(test_loader.dataset)
+#     split_lengths = [num_test_samples // 5] * 5
+#     sliced_testdatasets = random_split(test_loader.dataset, split_lengths)
+#     sliced_testloaders = [DataLoader(data, batch_size=parameters['batch_size'], shuffle=False, num_workers=2) for data in sliced_testdatasets]
+    
+#     results = test_one_epoch(model=model,
+#                              dataloader=sliced_testloaders[run_count-1],
+#                              num_classes=len(class_names),
+#                              device=device,
+#                              loss_function=parameters['loss_function'])
 
     # seperate the results
     true_labels = results['true_labels']
@@ -136,7 +155,6 @@ def run_test():
     time_elapsed = results['time_elapsed']
     auroc = results['auroc']
     
-
 
     # classification metrics
     accuracy_score = round(get_accuracy_score(true_labels=true_labels,predicted_labels=pred_labels),3)
@@ -157,8 +175,8 @@ def run_test():
     print('--'*20)
     print("F1 score : ", f1_score)
     print('--'*20)
-    print("\nClassification report : ",classification_report)
-    print('--'*20)
+#     print("\nClassification report : ",classification_report)
+#     print('--'*20)
 
 
 
@@ -178,14 +196,15 @@ def run_test():
     # Other metrics
     print("Inference time for ", true_labels.shape[0] ," image is : ", time_elapsed, "milliseconds")  
 
-    accuracy_runs.extend([accuracy_score])
-    precision_runs.extend([precision_score])
-    recall_runs.extend([recall_score])
-    f1_score_runs.extend([f1_score])
-    ece_runs.extend([expected_calibration_error])
-    brier_score_runs.extend([brier_score])
-    time_elapsed_runs.extend([time_elapsed])
-    auroc_runs.extend([auroc])
+    if run_count!=max_count:
+        accuracy_runs.extend([accuracy_score])
+        precision_runs.extend([precision_score])
+        recall_runs.extend([recall_score])
+        f1_score_runs.extend([f1_score])
+        ece_runs.extend([expected_calibration_error])
+        brier_score_runs.extend([brier_score])
+        time_elapsed_runs.extend([time_elapsed])
+        auroc_runs.extend([auroc])
     
     if run_count==max_count:
         results_dict = {
@@ -236,7 +255,7 @@ def run_test():
         run['metrics/expected_calibration_error'] = expected_calibration_error
         run['metrics/classification_report'] = classification_report
         run['metrics/images/confusion_matrix'].upload(confusion_mat_fig)
-        run['metrics/images/entropy_correct_incorrect'].upload(entropy_plot_fig)
+        #run['metrics/images/entropy_correct_incorrect'].upload(entropy_plot_fig)
         run['metrics/images/calibration_plot'].upload(calibration_curve_fig)
     
     
@@ -254,7 +273,7 @@ time_elapsed_runs = []
 auroc_runs = []
 
 
-max_count=5
+max_count=101
 run_count=0
 if __name__ == "__main__":
     for i in range(max_count):

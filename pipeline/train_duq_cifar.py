@@ -5,7 +5,7 @@ import torch
 import torch.utils.data
 import torch.nn.functional as F
 from torch.utils.tensorboard.writer import SummaryWriter
-from torchvision.models import resnet18
+from torchvision.models import resnet18, ResNet18_Weights
 
 from ignite.engine import Events, Engine
 from ignite.metrics import Accuracy, Average, Loss
@@ -24,7 +24,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-epochs = 50
+epochs = 35
 l_gradient_penalty = 0.5
 length_scale = 0.1
 batch_size = 128
@@ -37,7 +37,7 @@ centroid_size = 512
 model_output_size = 512
 
     
-feature_extractor = resnet18()
+feature_extractor = resnet18(weights = ResNet18_Weights.DEFAULT)
 feature_extractor.conv1 = torch.nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
 feature_extractor.maxpool = torch.nn.Identity()
 feature_extractor.fc = torch.nn.Identity()

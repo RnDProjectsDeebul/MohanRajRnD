@@ -18,23 +18,31 @@ from data import import_data
 data_dir = '../../data'
 save_path = '../results/'
 models_path = '../../results/'
-parameters = { 'num_epochs':3,
-                'num_classes':10,
-                'batch_size': 128,
+
+parameters = {  'num_epochs': 20,
+
                 #'model_name':'LeNet',
-                #'model_name':'Resnet18',
-                'model_name':'ResNet_DUQ',
+                #'dataset': "MNIST",
+              
+                'model_name':'Resnet18',
+                'dataset': "CIFAR10",
+                
                 #'loss_function': 'Crossentropy',
-                #'loss_function':'Evidential_MSE',
                 #'loss_function':'Evidential_LOG',
-                #'loss_function':'Evidential_DIGAMMA',
-                'loss_function': 'DUQ',
+                'loss_function':'Evidential_DIGAMMA',
+              
+                              
                 'lr': 0.1,
                 'weight_decay':5e-4,
                 'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
-                #'dataset': "MNIST",
-                'dataset': "CIFAR10",
+                #'model_name':'ResNet_DUQ',
+                #'loss_function': 'DUQ',
+                #'loss_function':'Evidential_MSE',
+                'num_classes':10,
+                'batch_size': 128,
                 'quantise': True}
+
+
 logger = False
 
 std_condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])

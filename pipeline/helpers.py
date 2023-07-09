@@ -135,18 +135,20 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
     
     uncertainty = []
 
+    model.eval()
+    model.to(device=device)
     # Begin testing
     with torch.no_grad():
         for batch_idx,(inputs,labels) in enumerate(dataloader):
             inputs,labels = inputs.to(device),labels.to(device)
-            model.eval()
-            model.to(device=device)
             
+                  
             if loss_function == 'Crossentropy': 
                 since = time.perf_counter()
                 output = model(inputs)
                 time_elapsed = time.perf_counter() - since
                 time_elapsed = '{:.3f}'.format(time_elapsed * 1000)
+                
                 cross_entropy_output.extend(output.cpu().numpy())
                 
                 _,predictions = torch.max(output,1)

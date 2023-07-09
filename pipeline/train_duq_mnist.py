@@ -23,7 +23,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-epochs = 50
+epochs = 7
 l_gradient_penalty = 0.05
 length_scale = 0.05
 batch_size = 128
