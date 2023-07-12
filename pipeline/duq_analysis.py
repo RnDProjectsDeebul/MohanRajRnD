@@ -29,24 +29,24 @@ def run_test():
     models_path = '../../results/'
 
     parameters = {  'num_classes': 10,
-                    'batch_size': 128, 
+                    'batch_size': 1, 
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                   
                     'dataset': "MNIST",
                     #'dataset': "CIFAR10", 
                   
                   
-                    'model_name':'LeNet',
+                    #'model_name':'LeNet',
                     #'model_name':'Resnet18',
                   
                     #'loss_function': 'Crossentropy',
                     #'loss_function':'Evidential_LOG',
-                    'loss_function':'Evidential_DIGAMMA',
+                    #'loss_function':'Evidential_DIGAMMA',
                   
                   
-                    #'model_name':'LeNet_DUQ',
+                    'model_name':'LeNet_DUQ',
                     #'model_name':'ResNet_DUQ',
-                    #'loss_function': 'DUQ',
+                    'loss_function': 'DUQ',
                   
                     'quantise': True}
     
@@ -119,11 +119,14 @@ def run_test():
     #print("Number of test images : ",len(test_loader.dataset))
     
     if run_count!=max_count:
-        sample_to_test = 5000
+        sample_to_test = 100
     else:
-        sample_to_test = 10000
+        sample_to_test = 100
         
     random_indices = random.sample(range(len(test_loader.dataset)), sample_to_test)
+    
+    #random_indices = [898, 9709]
+    print(random_indices)
     random_samp_dataset = torch.utils.data.Subset(test_loader.dataset, random_indices)
     random_samp_dataloader = DataLoader(random_samp_dataset, batch_size=parameters['batch_size'], shuffle=False, num_workers=2)
     print("Number of test images : ",len(random_samp_dataloader.dataset))
@@ -133,6 +136,19 @@ def run_test():
                              device=device,
                              loss_function=parameters['loss_function'])
 
+        
+    
+    
+#     num_test_samples = len(test_loader.dataset)
+#     split_lengths = [num_test_samples // 5] * 5
+#     sliced_testdatasets = random_split(test_loader.dataset, split_lengths)
+#     sliced_testloaders = [DataLoader(data, batch_size=parameters['batch_size'], shuffle=False, num_workers=2) for data in sliced_testdatasets]
+    
+#     results = test_one_epoch(model=model,
+#                              dataloader=sliced_testloaders[run_count-1],
+#                              num_classes=len(class_names),
+#                              device=device,
+#                              loss_function=parameters['loss_function'])
 
     # seperate the results
     true_labels = results['true_labels']
@@ -148,7 +164,7 @@ def run_test():
     precision_score = round(get_precision_score(true_labels,pred_labels),3)
     recall_score = round(get_recall_score(true_labels,pred_labels),3)
     f1_score = round(get_f1_score(true_labels,pred_labels),3)
-    classification_report = get_classification_report(true_labels,pred_labels,class_names)
+    #classification_report = get_classification_report(true_labels,pred_labels,class_names)
     confusion_mat_fig = plot_confusion_matrix1(true_labels=true_labels,
                                                 predicted_labels=pred_labels,
                                                 class_names=class_names,
@@ -213,7 +229,7 @@ def run_test():
             "brierscore":np.array(brier_score_runs),
             "expectedcalibrationerror":np.array(ece_runs),
             "inferencetime":np.array(time_elapsed_runs),
-            "auroc":np.array(auroc_runs),
+            "auroc":np.array(auroc),
             }
         metrics_df = pd.DataFrame(metrics_dict)
         metrics_df.to_csv(path_or_buf= save_path+condition_name+'_metrics.csv')        
@@ -260,7 +276,7 @@ time_elapsed_runs = []
 auroc_runs = []
 
 
-max_count=11
+max_count=1
 run_count=0
 if __name__ == "__main__":
     for i in range(max_count):

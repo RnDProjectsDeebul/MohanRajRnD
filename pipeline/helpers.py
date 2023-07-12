@@ -202,25 +202,27 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 duq_kernel_dist.append(-kernel_distance.cpu().numpy())
 
 
-    if loss_function == 'Crossentropy':    
+    if loss_function == 'Crossentropy':  
+        roc_auc = roc_auc_score(true_labels, softmax_probabilities, multi_class='ovr')
         ce_results_dict = {
                         "true_labels":np.array(true_labels),
                         "pred_labels":np.array(predicted_labels),
                         "probabilities":np.array(softmax_probabilities),
                         "model_output":np.array(cross_entropy_output),
                         "time_elapsed":time_elapsed,
-                        "auroc":0,
+                        "auroc":roc_auc,
         }
         return ce_results_dict
         
     elif loss_function[0:10] == 'Evidential':
+        roc_auc = roc_auc_score(true_labels, evidential_probabilities, multi_class='ovr')
         evi_results_dict = {
                         "true_labels":np.array(true_labels),
                         "pred_labels":np.array(predicted_labels),
                         "probabilities":np.array(evidential_probabilities),
                         "model_output":np.array(dirichlet_alpha_output),
                         "time_elapsed":time_elapsed,
-                        "auroc":0,
+                        "auroc":roc_auc,
         }
         return evi_results_dict
     
