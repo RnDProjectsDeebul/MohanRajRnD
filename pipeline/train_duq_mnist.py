@@ -75,7 +75,7 @@ def main():
         x, y = x.cuda(), y.cuda()
         lab = copy.deepcopy(y)
         x.requires_grad_(True)
-        y_pred = model(x)
+        y_pred, embeddings, z, diff, a1, a2, a3, a4 = model(x)
         y = F.one_hot(y, num_classes).float()
         loss = F.binary_cross_entropy(y_pred, y)
         
@@ -99,7 +99,7 @@ def main():
         x, y = batch
         x, y = x.cuda(), y.cuda()        
         x.requires_grad_(True)
-        y_pred = model(x)
+        y_pred, embeddings, z, diff, a1, a2, a3, a4 = model(x)
         return {"x": x, "y": y, "y_pred": y_pred}
 
     
@@ -212,7 +212,7 @@ if __name__ == "__main__":
             img, lab = next(dataiter)
             model_prepared(img)
     q_model = quantize_fx.convert_fx(model_prepared)
-    test_out = q_model(img)
+    test_out, embeddings, z, diff, a1, a2, a3, a4 = q_model(img)
 
     q_model_path = '../../results/DUQ_LeNet_DUQ_quant_model.pth'
     torch.save(q_model.state_dict(), q_model_path)    

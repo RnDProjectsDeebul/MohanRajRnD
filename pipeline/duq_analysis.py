@@ -67,6 +67,7 @@ def run_test():
         entropy_df_condition = str(parameters['loss_function'])
         name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
         tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Testing"]
+        parameters['device'] = "cpu"
 
 
     confusion_matrix_name = 'confusion_matrix_'+condition_name
@@ -108,6 +109,9 @@ def run_test():
                 model_prepared(images)
         model = quantize_fx.convert_fx(model_prepared)
         print("Model quantised, q-weights need be updated")
+        #print(model)
+        #print('--------------')
+        #model.print_readable()
 
 
     model.load_state_dict(torch.load(model_path))  
@@ -119,14 +123,15 @@ def run_test():
     #print("Number of test images : ",len(test_loader.dataset))
     
     if run_count!=max_count:
-        sample_to_test = 100
+        sample_to_test = 5000
     else:
-        sample_to_test = 100
+        sample_to_test = 5000
         
-    random_indices = random.sample(range(len(test_loader.dataset)), sample_to_test)
+    #random_indices = random.sample(range(len(test_loader.dataset)), sample_to_test)
     
+    random_indices = [898]
     #random_indices = [898, 9709]
-    print(random_indices)
+    #print(random_indices)
     random_samp_dataset = torch.utils.data.Subset(test_loader.dataset, random_indices)
     random_samp_dataloader = DataLoader(random_samp_dataset, batch_size=parameters['batch_size'], shuffle=False, num_workers=2)
     print("Number of test images : ",len(random_samp_dataloader.dataset))

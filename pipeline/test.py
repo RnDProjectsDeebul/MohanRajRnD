@@ -39,9 +39,9 @@ def run_test():
                     'model_name':'LeNet',
                     #'model_name':'Resnet18',
                   
-                    #'loss_function': 'Crossentropy',
+                    'loss_function': 'Crossentropy',
                     #'loss_function':'Evidential_LOG',
-                    'loss_function':'Evidential_DIGAMMA',
+                    #'loss_function':'Evidential_DIGAMMA',
                   
                   
                     #'model_name':'LeNet_DUQ',
@@ -52,11 +52,17 @@ def run_test():
     
     logger = False
 
-    
+ 
+    ue_dict = {     'Crossentropy' : 'ce',
+                    'Evidential_LOG': 'edl_log',
+                    'Evidential_DIGAMMA': 'edl_digamma',
+                    'DUQ': 'duq'}
+
     
     if parameters['quantise'] == True:
         model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant_model.pth'
         condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_quant'
+        saver_cond = str(ue_dict[str(parameters['loss_function'])]) + '-q ' + str(parameters['dataset'])
         entropy_df_condition = str(parameters['loss_function'])+'-Quant'
         name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function']) + "-" + "Quant"
         tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Testing", "Quant"]
@@ -64,14 +70,15 @@ def run_test():
     else:
         model_path = str(models_path)+str(parameters['loss_function'])+'_'+str(parameters['model_name'])+'_model.pth'
         condition_name = str(parameters['loss_function'])+'_'+str(parameters['model_name'])
+        saver_cond = str(ue_dict[str(parameters['loss_function'])]) + ' ' + str(parameters['dataset'])
         entropy_df_condition = str(parameters['loss_function'])
         name = "Testing" + "-" + str(parameters['model_name']) + "-" + str(parameters['loss_function'])
         tags = [str(parameters['loss_function']),str(parameters['model_name']),str(parameters['dataset']),"Testing"]
 
 
-    confusion_matrix_name = 'confusion_matrix_'+condition_name
+    confusion_matrix_name = 'confusion_plots/confusion ' + saver_cond
     entropy_plot_name = 'entropy_'+condition_name
-    calibration_plot_name = 'calibration_'+condition_name
+    calibration_plot_name = 'calibration_plots/calibration '+saver_cond
 
 
     if logger and run_count==max_count:
@@ -260,7 +267,7 @@ time_elapsed_runs = []
 auroc_runs = []
 
 
-max_count=11
+max_count=5
 run_count=0
 if __name__ == "__main__":
     for i in range(max_count):

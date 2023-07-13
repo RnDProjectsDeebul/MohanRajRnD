@@ -19,6 +19,17 @@ from sklearn.calibration import calibration_curve
 import time
 
 
+def plot_confusion_matrix1(true_labels,predicted_labels,class_names,results_path,plot_name):
+        fig, axs = plt.subplots(figsize=(20, 20))
+        plot_confusion_matrix(true_labels,predicted_labels , ax=axs,normalize=True)
+        tick_marks = np.arange(len(class_names))
+        plt.xticks(tick_marks, class_names, rotation=45, fontsize=15)
+        plt.yticks(tick_marks, class_names, rotation=45,fontsize=15)
+        plt.title('Confusion Matrix', fontsize=20)
+        plt.xlabel("Predicted label",fontsize=20)
+        plt.ylabel("True label",fontsize=20)
+        plt.savefig(results_path + plot_name + '.png')
+        return fig
 
 
 def plot_calibration_curve(y_prob, y_true, num_classes, save_path, file_name):
@@ -32,7 +43,7 @@ def plot_calibration_curve(y_prob, y_true, num_classes, save_path, file_name):
     ax.set_ylabel('True probability')
     ax.legend()
     plt.tight_layout()
-    #plt.savefig(save_path+file_name)
+    plt.savefig(save_path + file_name + '.png')
     return fig
 
 
@@ -181,7 +192,50 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 
             elif loss_function == 'DUQ': 
                 since = time.perf_counter()
-                output = model(inputs)
+                output, embeddings, z, diff, a1, a2, a3, a4 = model(inputs)
+                
+                
+                
+                #np.savetxt('embeddings.txt', embeddings.numpy())
+                #np.savetxt('diff.txt', diff.numpy())
+                #np.savetxt('a1.txt', a1)
+                #np.savetxt('a2.txt', a2.numpy())
+                #np.savetxt('a3.txt', a3.numpy())
+                #np.savetxt('a4.txt', a4.numpy())
+                
+                
+                print("embeddings is")
+                print(embeddings)
+                print("------------------------------------------------")
+                
+                print("z is")
+                print(z)
+                print("------------------------------------------------")
+                
+                print("diff between z and embeddings is")
+                print(diff)
+                print("-------------------------------------------------")
+                
+                print("sigma square value is")
+                print(a1)
+                print("-----------------------------------------------")
+                
+                print("difference square with negation is")
+                print(a2)
+                print("------------------------------------------------")
+                
+                print("after mean is")
+                print(a3)
+                print("-----------------------------------------------")
+                
+                print("after div is")
+                print(a4)
+                print("------------------------------------------------")
+                
+                print("after exp or distance is")
+                print(output)
+                print("--------------------------------------------------")
+                
                 time_elapsed = time.perf_counter() - since
                 time_elapsed = '{:.3f}'.format(time_elapsed * 1000)
                 duq_output.extend(output.cpu().numpy())
@@ -229,7 +283,8 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
     elif loss_function == 'DUQ':
         duq_accuracies = np.concatenate(duq_accuracies)
         duq_kernel_dist = np.concatenate(duq_kernel_dist)
-        roc_auc = roc_auc_score(1 - duq_accuracies, duq_kernel_dist)
+        #roc_auc = roc_auc_score(1 - duq_accuracies, duq_kernel_dist)
+        roc_auc = 0
         
         duq_results_dict = {
                         "true_labels":np.array(true_labels),
@@ -293,17 +348,7 @@ def get_accuracy_score(true_labels,predicted_labels):
 def get_precision_score(true_labels,predicted_labels):
     return precision_score(true_labels,predicted_labels,average='weighted')
 
-def plot_confusion_matrix1(true_labels,predicted_labels,class_names,results_path,plot_name):
-        fig, axs = plt.subplots(figsize=(20, 20))
-        plot_confusion_matrix(true_labels,predicted_labels , ax=axs,normalize=True)
-        tick_marks = np.arange(len(class_names))
-        plt.xticks(tick_marks, class_names, rotation=45, fontsize=15)
-        plt.yticks(tick_marks, class_names, rotation=45,fontsize=15)
-        plt.title('Confusion Matrix', fontsize=20)
-        plt.xlabel("Predicted label",fontsize=20)
-        plt.ylabel("True label",fontsize=20)
-        #plt.savefig(str(results_path)+str(plot_name)+'.png')
-        return fig
+
 
 def get_classification_report(true_labels,predicted_labels,classes):
         class_report = classification_report(true_labels, predicted_labels,target_names=classes)
