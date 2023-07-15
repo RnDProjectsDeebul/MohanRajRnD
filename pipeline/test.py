@@ -32,21 +32,21 @@ def run_test():
                     'batch_size': 128, 
                     'device': torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                   
-                    'dataset': "MNIST",
-                    #'dataset': "CIFAR10", 
+                    #'dataset': "MNIST",
+                    'dataset': "CIFAR10", 
                   
                   
-                    'model_name':'LeNet',
+                    #'model_name':'LeNet',
                     #'model_name':'Resnet18',
                   
-                    'loss_function': 'Crossentropy',
+                    #'loss_function': 'Crossentropy',
                     #'loss_function':'Evidential_LOG',
                     #'loss_function':'Evidential_DIGAMMA',
                   
                   
                     #'model_name':'LeNet_DUQ',
-                    #'model_name':'ResNet_DUQ',
-                    #'loss_function': 'DUQ',
+                    'model_name':'ResNet_DUQ',
+                    'loss_function': 'DUQ',
                   
                     'quantise': True}
     
@@ -267,7 +267,7 @@ time_elapsed_runs = []
 auroc_runs = []
 
 
-max_count=5
+max_count=101
 run_count=0
 if __name__ == "__main__":
     for i in range(max_count):

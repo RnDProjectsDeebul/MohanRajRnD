@@ -51,27 +51,27 @@ class CNN_DUQ(Model):
         return z
 
     
-#     def output_layer(self, z):
-#         embeddings = self.m / self.N.unsqueeze(0)
-#         diff = z - embeddings.unsqueeze(0)
-#         distances = (-(diff**2)).mean(1).div(2 * self.sigma**2).exp()
-#         return distances
-
     def output_layer(self, z):
         embeddings = self.m / self.N.unsqueeze(0)
         diff = z - embeddings.unsqueeze(0)
-        
-        a1 = self.sigma**2
-        
-        a2 = -(diff**2)
-        a3 = (a2).mean(1)
-        a4 = a3.div(2 * a1)
-        a5 = a4.exp()
+        distances = (-(diff**2)).mean(1).div(2 * self.sigma**2).exp()
+        return distances
 
-        return a5, embeddings, z, diff, a1, a2, a3, a4
+#     def output_layer(self, z):
+#         embeddings = self.m / self.N.unsqueeze(0)
+#         diff = z - embeddings.unsqueeze(0)
+        
+#         a1 = self.sigma**2
+        
+#         a2 = -(diff**2)
+#         a3 = (a2).mean(1)
+#         a4 = a3.div(2 * a1)
+#         a5 = a4.exp()
+
+#         return a5, embeddings, z, diff, a1, a2, a3, a4
     
     
     def forward(self, x):
         z = self.last_layer(self.compute_features(x))
-        y_pred, embeddings, z, diff, a1, a2, a3, a4 = self.output_layer(z)
-        return y_pred, embeddings, z, diff, a1, a2, a3, a4
+        y_pred = self.output_layer(z)
+        return y_pred

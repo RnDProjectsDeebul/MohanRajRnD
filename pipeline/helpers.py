@@ -192,50 +192,46 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
                 
             elif loss_function == 'DUQ': 
                 since = time.perf_counter()
-                output, embeddings, z, diff, a1, a2, a3, a4 = model(inputs)
                 
                 
+                output = model(inputs)
                 
-                #np.savetxt('embeddings.txt', embeddings.numpy())
-                #np.savetxt('diff.txt', diff.numpy())
-                #np.savetxt('a1.txt', a1)
-                #np.savetxt('a2.txt', a2.numpy())
-                #np.savetxt('a3.txt', a3.numpy())
-                #np.savetxt('a4.txt', a4.numpy())
+#                 output, embeddings, z, diff, a1, a2, a3, a4 = model(inputs)
                 
                 
-                print("embeddings is")
-                print(embeddings)
-                print("------------------------------------------------")
+#                 print("embeddings is")
+#                 print(embeddings)
+#                 print("------------------------------------------------")
                 
-                print("z is")
-                print(z)
-                print("------------------------------------------------")
+#                 print("z is")
+#                 print(z)
+#                 print("------------------------------------------------")
                 
-                print("diff between z and embeddings is")
-                print(diff)
-                print("-------------------------------------------------")
+#                 print("diff between z and embeddings is")
+#                 print(diff)
+#                 print("-------------------------------------------------")
                 
-                print("sigma square value is")
-                print(a1)
-                print("-----------------------------------------------")
+#                 print("sigma square value is")
+#                 print(a1)
+#                 print("-----------------------------------------------")
                 
-                print("difference square with negation is")
-                print(a2)
-                print("------------------------------------------------")
+#                 print("difference square with negation is")
+#                 print(a2)
+#                 print("------------------------------------------------")
                 
-                print("after mean is")
-                print(a3)
-                print("-----------------------------------------------")
+#                 print("after mean is")
+#                 print(a3)
+#                 print("-----------------------------------------------")
                 
-                print("after div is")
-                print(a4)
-                print("------------------------------------------------")
+#                 print("after div is")
+#                 print(a4)
+#                 print("------------------------------------------------")
                 
-                print("after exp or distance is")
-                print(output)
-                print("--------------------------------------------------")
-                
+#                 print("after exp or distance is")
+#                 print(output)
+#                 print("--------------------------------------------------")
+
+
                 time_elapsed = time.perf_counter() - since
                 time_elapsed = '{:.3f}'.format(time_elapsed * 1000)
                 duq_output.extend(output.cpu().numpy())
@@ -283,8 +279,8 @@ def test_one_epoch(dataloader,num_classes,model,device,loss_function):
     elif loss_function == 'DUQ':
         duq_accuracies = np.concatenate(duq_accuracies)
         duq_kernel_dist = np.concatenate(duq_kernel_dist)
-        #roc_auc = roc_auc_score(1 - duq_accuracies, duq_kernel_dist)
-        roc_auc = 0
+        roc_auc = roc_auc_score(1 - duq_accuracies, duq_kernel_dist)
+        #roc_auc = 0
         
         duq_results_dict = {
                         "true_labels":np.array(true_labels),
